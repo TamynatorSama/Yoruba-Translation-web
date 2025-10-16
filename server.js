@@ -4,6 +4,7 @@ const path = require('path');
 const { google } = require('googleapis');
 const https = require('https');
 const http = require('http');
+const readline = require('readline');
 
 // Load environment variables
 require('dotenv').config();
@@ -13,40 +14,94 @@ const PORT = process.env.PORT || 3000;
 const DRIVE_FOLDER_ID = process.env.DRIVE_FOLDER_ID;
 
 // Middleware
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+app.use(express.json({ limit: '1mb' }));
 app.use(express.static('public'));
 
-// Global state
+// MEMORY-OPTIMIZED GLOBAL STATE
 let drive;
-let translatedData = [];
+let datasetInfo = { 
+    fileId: null, 
+    total: 0, 
+    translated: 0, 
+    headers: [],
+    fileName: null,
+    lastSync: null
+};
 let humanEdits = [];
 let activeUsers = new Map();
 let itemLocks = new Map();
 let systemStats = {
-    serverStartTime: new Date().toISOString(),
+    serverStart: new Date().toISOString(),
     totalRequests: 0,
-    lastSyncTime: null,
     errorCount: 0,
-    imageProxyRequests: 0,
-    successfulImageLoads: 0
+    cacheHits: 0,
+    cacheMisses: 0
 };
+
+// Simple LRU Cache for items (memory-efficient)
+class ItemCache {
+    constructor(maxSize = 50) { // Reduced to 50 items max
+        this.maxSize = maxSize;
+        this.cache = new Map();
+    }
+    
+    get(key) {
+        if (this.cache.has(key)) {
+            const value = this.cache.get(key);
+            this.cache.delete(key);
+            this.cache.set(key, value);
+            systemStats.cacheHits++;
+            return value;
+        }
+        systemStats.cacheMisses++;
+        return null;
+    }
+    
+    set(key, value) {
+        if (this.cache.has(key)) {
+            this.cache.delete(key);
+        } else if (this.cache.size >= this.maxSize) {
+            const firstKey = this.cache.keys().next().value;
+            this.cache.delete(firstKey);
+        }
+        this.cache.set(key, value);
+    }
+    
+    size() {
+        return this.cache.size;
+    }
+    
+    clear() {
+        this.cache.clear();
+    }
+}
+
+const itemCache = new ItemCache(50);
 
 // Logging middleware
 app.use((req, res, next) => {
-    const startTime = Date.now();
     systemStats.totalRequests++;
+    const startTime = Date.now();
     
-    console.log(`📥 ${new Date().toISOString()} - ${req.method} ${req.url}`);
+    console.log(`📥 ${new Date().toISOString().substring(11, 19)} ${req.method} ${req.url}`);
     
     res.on('finish', () => {
         const duration = Date.now() - startTime;
-        const statusEmoji = res.statusCode < 400 ? '✅' : '❌';
-        console.log(`📤 ${statusEmoji} ${res.statusCode} ${req.method} ${req.url} - ${duration}ms`);
+        const emoji = res.statusCode < 400 ? '✅' : '❌';
+        console.log(`📤 ${emoji} ${res.statusCode} ${req.method} ${req.url} - ${duration}ms`);
     });
     
     next();
 });
+
+console.log('🚀 Starting Yoruba Caption Editor Server...');
+console.log(`📅 Current Time (UTC): 2025-10-16 02:15:07`);
+console.log(`👤 Current User: TamynatorSama`);
 
 // Initialize Google Drive API
 async function initializeGoogleDrive() {
@@ -56,18 +111,23 @@ async function initializeGoogleDrive() {
         let auth;
         
         if (process.env.NODE_ENV === 'production') {
-            // Use environment variables in production
+            console.log('🌐 Production mode detected');
+            
+            if (!process.env.GOOGLE_CLIENT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
+                throw new Error('Missing Google credentials in environment variables');
+            }
+            
             const credentials = {
-                type: process.env.GOOGLE_TYPE,
+                type: "service_account",
                 project_id: process.env.GOOGLE_PROJECT_ID,
                 private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
-                private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+                private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
                 client_email: process.env.GOOGLE_CLIENT_EMAIL,
                 client_id: process.env.GOOGLE_CLIENT_ID,
                 auth_uri: "https://accounts.google.com/o/oauth2/auth",
                 token_uri: "https://oauth2.googleapis.com/token",
                 auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
-                client_x509_cert_url: `https://www.googleapis.com/robot/v1/metadata/x509/${process.env.GOOGLE_CLIENT_EMAIL}`
+                client_x509_cert_url: `https://www.googleapis.com/robot/v1/metadata/x509/${encodeURIComponent(process.env.GOOGLE_CLIENT_EMAIL)}`
             };
             
             auth = new google.auth.GoogleAuth({
@@ -75,7 +135,7 @@ async function initializeGoogleDrive() {
                 scopes: ['https://www.googleapis.com/auth/drive']
             });
         } else {
-            // Use credentials.json in development
+            console.log('🏠 Development mode detected');
             auth = new google.auth.GoogleAuth({
                 keyFile: 'credentials.json',
                 scopes: ['https://www.googleapis.com/auth/drive']
@@ -85,46 +145,21 @@ async function initializeGoogleDrive() {
         drive = google.drive({ version: 'v3', auth });
         
         // Test connection
-        await drive.files.list({ pageSize: 1 });
+        console.log('🧪 Testing Google Drive connection...');
+        const testResponse = await drive.files.list({ pageSize: 1 });
+        console.log(`✅ Connection successful - API responding`);
         
-        console.log('✅ Google Drive API initialized successfully');
         return true;
     } catch (error) {
-        console.error('❌ Failed to initialize Google Drive API:', error.message);
+        console.error('❌ Google Drive initialization failed:', error.message);
+        if (error.message.includes('ENOENT')) {
+            console.error('💡 Make sure credentials.json exists or environment variables are set');
+        }
         return false;
     }
 }
 
-// Utility: Parse CSV
-function parseCSV(text) {
-    if (!text || !text.trim()) return [];
-    
-    const lines = text.split('\n').filter(line => line.trim());
-    if (lines.length === 0) return [];
-    
-    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-    const data = [];
-
-    for (let i = 1; i < lines.length; i++) {
-        try {
-            const values = parseCSVLine(lines[i]);
-            const row = {};
-            
-            headers.forEach((header, index) => {
-                row[header] = values[index] || '';
-            });
-            
-            if (row.Caption || row.image_url || row.translation) {
-                data.push(row);
-            }
-        } catch (error) {
-            console.warn(`⚠️ Skipping malformed CSV line ${i}: ${lines[i].substring(0, 50)}...`);
-        }
-    }
-
-    return data;
-}
-
+// Utility: Parse single CSV line safely
 function parseCSVLine(line) {
     const result = [];
     let current = '';
@@ -147,63 +182,276 @@ function parseCSVLine(line) {
     return result;
 }
 
-// Load file from Google Drive
-async function loadFromDrive(fileName) {
+// MEMORY-EFFICIENT: Analyze dataset structure without loading full file
+async function analyzeDatasetStructure(fileName) {
     if (!drive) {
-        console.error('❌ Google Drive not initialized');
+        console.error('❌ Drive not initialized');
         return null;
     }
 
     try {
-        console.log(`📥 Loading ${fileName} from Google Drive...`);
+        console.log(`📊 Analyzing ${fileName} structure...`);
         
-        const response = await drive.files.list({
+        // Find file
+        const fileList = await drive.files.list({
             q: `name='${fileName}' and '${DRIVE_FOLDER_ID}' in parents and trashed=false`,
-            fields: 'files(id, name, modifiedTime, size)',
-            orderBy: 'modifiedTime desc'
+            fields: 'files(id, name, size, modifiedTime)',
         });
 
-        if (response.data.files.length === 0) {
+        if (fileList.data.files.length === 0) {
             console.log(`📄 ${fileName} not found in Google Drive`);
             return null;
         }
 
-        const file = response.data.files[0];
-        const sizeInMB = file.size ? (parseInt(file.size) / 1024 / 1024).toFixed(2) : 'unknown';
-        console.log(`📂 Found ${fileName} (${sizeInMB} MB, modified: ${file.modifiedTime})`);
+        const file = fileList.data.files[0];
+        const sizeInMB = (parseInt(file.size) / 1024 / 1024).toFixed(2);
+        console.log(`📂 Found: ${fileName} (${sizeInMB} MB, modified: ${file.modifiedTime})`);
+        
+        // Stream ONLY first 500 lines to analyze structure
+        const stream = await drive.files.get(
+            { fileId: file.id, alt: 'media' },
+            { responseType: 'stream' }
+        );
+
+        let lineCount = 0;
+        let translatedCount = 0;
+        let headers = null;
+        
+        const rl = readline.createInterface({
+            input: stream,
+            crlfDelay: Infinity
+        });
+
+        console.log('📖 Sampling file structure (first 500 lines)...');
+        
+        for await (const line of rl) {
+            if (lineCount === 0) {
+                // Get headers
+                headers = line.split(',').map(h => h.trim().replace(/"/g, ''));
+                console.log(`📋 Headers found: [${headers.slice(0, 5).join(', ')}${headers.length > 5 ? '...' : ''}]`);
+                lineCount++;
+                continue;
+            }
+            
+            // Sample to estimate translation completion
+            if (lineCount <= 500) {
+                try {
+                    const values = parseCSVLine(line);
+                    // Look for translation column (usually 3rd column)
+                    const translationIndex = headers.findIndex(h => 
+                        h.toLowerCase().includes('translation') || 
+                        h.toLowerCase() === 'translation'
+                    ) || 2;
+                    
+                    if (values[translationIndex] && values[translationIndex].trim() && 
+                        !values[translationIndex].includes('[ERROR]')) {
+                        translatedCount++;
+                    }
+                } catch (e) {
+                    // Skip malformed lines
+                }
+            } else {
+                // Stop sampling after 500 lines
+                break;
+            }
+            
+            lineCount++;
+        }
+
+        // Estimate totals based on file size (rough but memory-efficient)
+        const bytesPerLine = parseInt(file.size) / Math.max(lineCount, 1000);
+        const estimatedTotal = Math.round(parseInt(file.size) / bytesPerLine) - 1; // -1 for header
+        const translationRate = translatedCount / Math.min(lineCount - 1, 500);
+        const estimatedTranslated = Math.round(estimatedTotal * translationRate);
+
+        console.log(`✅ Analysis complete:`);
+        console.log(`   📊 Estimated total items: ${estimatedTotal.toLocaleString()}`);
+        console.log(`   ✔️ Estimated translated: ${estimatedTranslated.toLocaleString()} (${(translationRate * 100).toFixed(1)}%)`);
+        console.log(`   💾 Memory used for analysis: ~${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
+        
+        return {
+            fileId: file.id,
+            fileName: fileName,
+            headers: headers,
+            totalItems: estimatedTotal,
+            translatedItems: estimatedTranslated,
+            fileSize: file.size,
+            lastModified: file.modifiedTime
+        };
+    } catch (error) {
+        console.error(`❌ Error analyzing ${fileName}:`, error.message);
+        systemStats.errorCount++;
+        return null;
+    }
+}
+
+// MEMORY-EFFICIENT: Load single item by index from Google Drive
+async function loadItemByIndex(index) {
+    try {
+        // Check cache first
+        const cached = itemCache.get(index);
+        if (cached) {
+            return cached;
+        }
+
+        if (!datasetInfo.fileId) {
+            throw new Error('Dataset not initialized');
+        }
+
+        console.log(`📖 Loading item ${index} from Google Drive...`);
+
+        // Create stream to read file line by line
+        const stream = await drive.files.get(
+            { fileId: datasetInfo.fileId, alt: 'media' },
+            { responseType: 'stream' }
+        );
+
+        let currentLineNumber = 0;
+        let targetItem = null;
+
+        const rl = readline.createInterface({
+            input: stream,
+            crlfDelay: Infinity
+        });
+
+        for await (const line of rl) {
+            if (currentLineNumber === 0) {
+                // Skip header line
+                currentLineNumber++;
+                continue;
+            }
+
+            // Found our target line
+            if (currentLineNumber === index + 1) { // +1 because we skipped header
+                try {
+                    const values = parseCSVLine(line);
+                    const item = {};
+                    
+                    datasetInfo.headers.forEach((header, headerIndex) => {
+                        item[header] = values[headerIndex] || '';
+                    });
+                    
+                    targetItem = item;
+                    break;
+                } catch (parseError) {
+                    throw new Error(`Failed to parse item ${index}: ${parseError.message}`);
+                }
+            }
+
+            currentLineNumber++;
+            
+            // Safety: don't read too far past target
+            if (currentLineNumber > index + 10) {
+                break;
+            }
+        }
+
+        if (!targetItem) {
+            throw new Error(`Item ${index} not found in dataset`);
+        }
+
+        // Cache the loaded item
+        itemCache.set(index, targetItem);
+        console.log(`✅ Item ${index} loaded and cached`);
+        
+        return targetItem;
+    } catch (error) {
+        console.error(`❌ Error loading item ${index}:`, error.message);
+        systemStats.errorCount++;
+        throw error;
+    }
+}
+
+// Load small files completely (like human edits)
+async function loadSmallFileFromDrive(fileName) {
+    if (!drive) return null;
+
+    try {
+        const fileList = await drive.files.list({
+            q: `name='${fileName}' and '${DRIVE_FOLDER_ID}' in parents and trashed=false`,
+            fields: 'files(id, name, size)',
+        });
+
+        if (fileList.data.files.length === 0) {
+            return null;
+        }
+
+        const file = fileList.data.files[0];
+        const sizeInMB = (parseInt(file.size) / 1024 / 1024).toFixed(2);
+        
+        // Only load files smaller than 5MB completely
+        if (parseFloat(sizeInMB) > 5) {
+            console.log(`⚠️ ${fileName} is too large (${sizeInMB}MB) for complete loading`);
+            return null;
+        }
+
+        console.log(`📥 Loading ${fileName} (${sizeInMB} MB)...`);
         
         const fileContent = await drive.files.get(
             { fileId: file.id, alt: 'media' },
             { responseType: 'text' }
         );
 
-        console.log(`✅ Successfully loaded ${fileName}`);
+        console.log(`✅ ${fileName} loaded successfully`);
         return fileContent.data;
     } catch (error) {
         console.error(`❌ Error loading ${fileName}:`, error.message);
-        systemStats.errorCount++;
         return null;
     }
 }
 
+// Parse small CSV files
+function parseSmallCSV(text) {
+    if (!text || !text.trim()) return [];
+    
+    const lines = text.split('\n').filter(line => line.trim());
+    if (lines.length === 0) return [];
+    
+    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+    const data = [];
+
+    for (let i = 1; i < lines.length; i++) {
+        try {
+            const values = parseCSVLine(lines[i]);
+            const row = {};
+            
+            headers.forEach((header, index) => {
+                row[header] = values[index] || '';
+            });
+            
+            data.push(row);
+        } catch (error) {
+            console.warn(`⚠️ Skipping malformed line ${i} in CSV`);
+        }
+    }
+
+    return data;
+}
+
 // Save edits to Google Drive
-async function saveEditsToDrive() {
-    if (!drive || humanEdits.length === 0) return false;
+async function saveEditsToGoogleDrive() {
+    if (!drive || humanEdits.length === 0) {
+        console.log('📝 No edits to save');
+        return false;
+    }
 
     try {
+        console.log(`💾 Saving ${humanEdits.length} edits to Google Drive...`);
+        
+        // Convert edits to CSV
         const headers = [
             'index', 'original_translation', 'edited_translation', 
             'editor', 'timestamp', 'notes', 'quality_score'
         ];
         
-        let csv = headers.join(',') + '\n';
+        let csvContent = headers.join(',') + '\n';
         
         humanEdits.forEach(edit => {
             const row = headers.map(header => {
                 const value = String(edit[header] || '');
                 return '"' + value.replace(/"/g, '""') + '"';
             });
-            csv += row.join(',') + '\n';
+            csvContent += row.join(',') + '\n';
         });
 
         // Check if file exists
@@ -214,15 +462,18 @@ async function saveEditsToDrive() {
 
         const media = {
             mimeType: 'text/csv',
-            body: csv,
+            body: csvContent,
         };
 
         if (existingFiles.data.files.length > 0) {
+            // Update existing file
             await drive.files.update({
                 fileId: existingFiles.data.files[0].id,
                 media: media,
             });
+            console.log(`✅ Updated existing human_edits.csv with ${humanEdits.length} edits`);
         } else {
+            // Create new file
             await drive.files.create({
                 requestBody: {
                     name: 'human_edits.csv',
@@ -230,91 +481,96 @@ async function saveEditsToDrive() {
                 },
                 media: media,
             });
+            console.log(`✅ Created new human_edits.csv with ${humanEdits.length} edits`);
         }
 
-        console.log(`💾 Saved ${humanEdits.length} edits to Google Drive`);
         return true;
     } catch (error) {
-        console.error('❌ Error saving edits to Google Drive:', error.message);
+        console.error('❌ Failed to save edits to Google Drive:', error.message);
         systemStats.errorCount++;
         return false;
     }
 }
 
-// Sync data from Google Drive
-async function syncData() {
-    console.log('🔄 Syncing data from Google Drive...');
-    const syncStart = Date.now();
+// MEMORY-OPTIMIZED SYNC FUNCTION
+async function performDataSync() {
+    console.log('🔄 Performing memory-optimized data sync...');
+    const syncStartTime = Date.now();
 
     try {
-        // Load main dataset
-        let dataLoaded = false;
+        // Step 1: Analyze main dataset structure (don't load data)
+        let analysis = await analyzeDatasetStructure('translated_1M_final.csv');
         
-        // Try final dataset first
-        const finalData = await loadFromDrive('translated_1M_final.csv');
-        if (finalData) {
-            translatedData = parseCSV(finalData);
-            console.log(`✅ Loaded ${translatedData.length} items from final dataset`);
-            dataLoaded = true;
-        }
-        
-        // Fallback to checkpoint
-        if (!dataLoaded) {
-            const checkpointData = await loadFromDrive('translation_checkpoint.csv');
-            if (checkpointData) {
-                translatedData = parseCSV(checkpointData);
-                console.log(`✅ Loaded ${translatedData.length} items from checkpoint`);
-                dataLoaded = true;
-            }
+        if (!analysis) {
+            console.log('📁 Final dataset not found, trying checkpoint...');
+            analysis = await analyzeDatasetStructure('translation_checkpoint.csv');
         }
 
-        if (!dataLoaded) {
-            console.error('❌ No translation data found in Google Drive');
+        if (!analysis) {
+            console.error('❌ No translation dataset found in Google Drive');
             return false;
         }
 
-        // Load existing edits
-        const editsData = await loadFromDrive('human_edits.csv');
-        if (editsData) {
-            humanEdits = parseCSV(editsData);
+        // Step 2: Store dataset metadata only
+        datasetInfo = {
+            fileId: analysis.fileId,
+            fileName: analysis.fileName,
+            headers: analysis.headers,
+            total: analysis.totalItems,
+            translated: analysis.translatedItems,
+            fileSize: analysis.fileSize,
+            lastModified: analysis.lastModified,
+            lastSync: new Date().toISOString()
+        };
+
+        console.log(`✅ Dataset metadata stored: ${datasetInfo.total.toLocaleString()} items`);
+
+        // Step 3: Load human edits (small file, safe to load completely)
+        const editsFileContent = await loadSmallFileFromDrive('human_edits.csv');
+        if (editsFileContent) {
+            humanEdits = parseSmallCSV(editsFileContent);
             console.log(`✅ Loaded ${humanEdits.length} human edits`);
         } else {
             humanEdits = [];
-            console.log('📝 No existing edits found');
+            console.log('📝 No existing human edits found');
         }
 
-        systemStats.lastSyncTime = new Date().toISOString();
-        const syncDuration = Date.now() - syncStart;
+        // Step 4: Clear cache to free memory
+        itemCache.clear();
+        console.log('🧹 Cleared item cache');
+
+        const syncDuration = Date.now() - syncStartTime;
+        const memoryUsage = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
         
-        console.log(`🎉 Sync completed in ${syncDuration}ms`);
-        console.log(`📊 Dataset: ${translatedData.length} items, Edits: ${humanEdits.length}`);
+        console.log(`🎉 Sync completed successfully in ${syncDuration}ms`);
+        console.log(`💾 Current memory usage: ${memoryUsage}MB`);
+        console.log(`📊 Cache stats: ${systemStats.cacheHits} hits, ${systemStats.cacheMisses} misses`);
         
         return true;
     } catch (error) {
-        console.error('❌ Sync failed:', error.message);
+        console.error('❌ Data sync failed:', error.message);
         systemStats.errorCount++;
         return false;
     }
 }
 
-// Image proxy with proper error handling
+// Image proxy with enhanced error handling
 app.get('/api/image-proxy', (req, res) => {
     const imageUrl = req.query.url;
     
     if (!imageUrl) {
-        return res.status(400).json({ error: 'Image URL parameter required' });
+        return res.status(400).json({ error: 'Image URL parameter is required' });
     }
 
-    console.log(`🖼️ Image proxy request: ${imageUrl.substring(0, 60)}...`);
-    systemStats.imageProxyRequests++;
+    console.log(`🖼️ Proxying image: ${imageUrl.substring(0, 50)}...`);
     
-    let responseEnded = false;
+    let responseHandled = false;
     
-    const endResponse = (statusCode, data) => {
-        if (responseEnded) return;
-        responseEnded = true;
+    const handleResponse = (statusCode, data, contentType = 'application/json') => {
+        if (responseHandled) return;
+        responseHandled = true;
         
-        if (typeof data === 'object') {
+        if (contentType === 'application/json') {
             res.status(statusCode).json(data);
         } else {
             res.status(statusCode).send(data);
@@ -325,56 +581,54 @@ app.get('/api/image-proxy', (req, res) => {
         const protocol = imageUrl.startsWith('https:') ? https : http;
         
         const request = protocol.get(imageUrl, (imageResponse) => {
-            if (responseEnded) return;
+            if (responseHandled) return;
             
-            console.log(`📡 Image response: ${imageResponse.statusCode} for ${imageUrl.substring(0, 40)}...`);
+            console.log(`📡 Image response status: ${imageResponse.statusCode}`);
             
             // Handle redirects
             if (imageResponse.statusCode >= 300 && imageResponse.statusCode < 400) {
                 const location = imageResponse.headers.location;
                 if (location) {
-                    return endResponse(302, { redirect: location });
+                    return handleResponse(302, { redirect: location });
                 }
             }
             
-            // Handle errors
+            // Handle HTTP errors
             if (imageResponse.statusCode !== 200) {
-                return endResponse(imageResponse.statusCode, { 
-                    error: `Image server returned ${imageResponse.statusCode}` 
+                return handleResponse(imageResponse.statusCode, { 
+                    error: `Image server responded with ${imageResponse.statusCode}` 
                 });
             }
             
-            // Set headers for successful response
-            if (!responseEnded) {
+            // Success - stream the image
+            if (!responseHandled) {
                 try {
                     res.setHeader('Access-Control-Allow-Origin', '*');
                     res.setHeader('Content-Type', imageResponse.headers['content-type'] || 'image/jpeg');
                     res.setHeader('Cache-Control', 'public, max-age=3600');
                     
-                    responseEnded = true;
-                    systemStats.successfulImageLoads++;
-                    
+                    responseHandled = true;
                     imageResponse.pipe(res);
                     
                     imageResponse.on('end', () => {
-                        console.log(`✅ Image delivered: ${imageUrl.substring(0, 40)}...`);
+                        console.log(`✅ Image successfully delivered`);
                     });
                     
                 } catch (headerError) {
-                    endResponse(500, { error: 'Failed to set response headers' });
+                    handleResponse(500, { error: 'Failed to set response headers' });
                 }
             }
             
             imageResponse.on('error', (streamError) => {
                 console.error('Image stream error:', streamError.message);
-                endResponse(500, { error: 'Image stream failed' });
+                handleResponse(500, { error: 'Image streaming failed' });
             });
         });
 
         // Set timeout
-        request.setTimeout(10000, () => {
+        request.setTimeout(8000, () => {
             request.destroy();
-            endResponse(408, { error: 'Image request timeout' });
+            handleResponse(408, { error: 'Image request timeout' });
         });
 
         // Handle request errors
@@ -383,167 +637,188 @@ app.get('/api/image-proxy', (req, res) => {
             
             let errorMessage = 'Failed to fetch image';
             if (error.code === 'ENOTFOUND') errorMessage = 'Image server not found';
-            else if (error.code === 'ECONNREFUSED') errorMessage = 'Connection refused';
-            else if (error.code === 'ETIMEDOUT') errorMessage = 'Connection timeout';
+            else if (error.code === 'ECONNREFUSED') errorMessage = 'Image server refused connection';
+            else if (error.code === 'ETIMEDOUT') errorMessage = 'Image server connection timeout';
             
-            endResponse(500, { error: errorMessage, code: error.code });
+            handleResponse(500, { error: errorMessage, code: error.code });
         });
 
         // Handle client disconnect
         req.on('close', () => {
-            if (!responseEnded) {
+            if (!responseHandled) {
                 request.destroy();
-                responseEnded = true;
-                console.log('🔌 Client disconnected during image proxy');
+                responseHandled = true;
+                console.log('🔌 Client disconnected during image request');
             }
         });
 
-    } catch (error) {
-        console.error('Image proxy setup error:', error);
-        endResponse(500, { error: 'Image proxy internal error' });
+    } catch (setupError) {
+        console.error('Image proxy setup error:', setupError);
+        handleResponse(500, { error: 'Image proxy internal error' });
     }
 });
 
-// API Routes
+// API ROUTES
 
-// Health check
+// Health check endpoint
 app.get('/api/health', (req, res) => {
+    const memoryUsage = process.memoryUsage();
+    
     res.json({
         status: 'healthy',
-        timestamp: new Date().toISOString(),
-        uptime: Math.floor(process.uptime()),
+        timestamp: '2025-10-16 02:15:07',
+        server_time: new Date().toISOString(),
+        uptime_seconds: Math.floor(process.uptime()),
         memory: {
-            used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
-            total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024)
+            used_mb: Math.round(memoryUsage.heapUsed / 1024 / 1024),
+            total_mb: Math.round(memoryUsage.heapTotal / 1024 / 1024),
+            system_mb: Math.round(memoryUsage.rss / 1024 / 1024)
         },
-        stats: systemStats,
-        data: {
-            translated_items: translatedData.length,
+        dataset: {
+            total_items: datasetInfo.total,
+            translated_items: datasetInfo.translated,
             human_edits: humanEdits.length,
-            active_users: activeUsers.size,
-            locked_items: itemLocks.size
-        }
+            cache_size: itemCache.size()
+        },
+        system_stats: systemStats
     });
 });
 
-// Get statistics
+// Get dataset statistics
 app.get('/api/stats', (req, res) => {
     try {
-        const totalItems = translatedData.length;
-        const translatedItems = translatedData.filter(item => item.translation && item.translation.trim()).length;
-        const editedItems = humanEdits.length;
-        
-        const activeUsersList = Array.from(activeUsers.entries()).map(([username, data]) => ({
+        const activeUsersList = Array.from(activeUsers.entries()).map(([username, userData]) => ({
             username: username,
-            current_item: data.current_item || 0,
-            last_active: data.last_active,
-            session_duration: data.session_start ? 
-                Math.floor((Date.now() - new Date(data.session_start)) / 1000 / 60) : 0
+            current_item: userData.current_item || 0,
+            last_active: userData.last_active,
+            session_duration_minutes: userData.session_start ? 
+                Math.floor((Date.now() - new Date(userData.session_start)) / 1000 / 60) : 0
         }));
 
+        const memoryUsage = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+
         res.json({
-            total: totalItems,
-            translated: translatedItems,
-            edited: editedItems,
-            completion_rate: totalItems > 0 ? ((translatedItems / totalItems) * 100).toFixed(1) : '0',
-            edit_rate: totalItems > 0 ? ((editedItems / totalItems) * 100).toFixed(1) : '0',
+            total: datasetInfo.total,
+            translated: datasetInfo.translated,
+            edited: humanEdits.length,
+            completion_rate: datasetInfo.total > 0 ? 
+                ((datasetInfo.translated / datasetInfo.total) * 100).toFixed(1) : '0.0',
+            edit_rate: datasetInfo.total > 0 ? 
+                ((humanEdits.length / datasetInfo.total) * 100).toFixed(1) : '0.0',
             active_users: activeUsersList,
-            locked_items: Array.from(itemLocks.entries()).map(([index, user]) => ({ index, user })),
-            system_stats: {
+            locked_items: Array.from(itemLocks.entries()).map(([index, user]) => ({ 
+                index: parseInt(index), 
+                user: user 
+            })),
+            system_info: {
                 server_uptime_minutes: Math.floor(process.uptime() / 60),
+                memory_usage_mb: memoryUsage,
                 total_requests: systemStats.totalRequests,
-                last_sync: systemStats.lastSyncTime,
                 error_count: systemStats.errorCount,
-                image_proxy_requests: systemStats.imageProxyRequests,
-                successful_image_loads: systemStats.successfulImageLoads
+                cache_hits: systemStats.cacheHits,
+                cache_misses: systemStats.cacheMisses,
+                cache_size: itemCache.size(),
+                last_sync: datasetInfo.lastSync,
+                dataset_file: datasetInfo.fileName
             }
         });
     } catch (error) {
-        console.error('Stats error:', error);
-        res.status(500).json({ error: 'Failed to get statistics' });
+        console.error('Stats endpoint error:', error);
+        res.status(500).json({ error: 'Failed to retrieve statistics' });
     }
 });
 
-// Get single item
-app.get('/api/item/:index', (req, res) => {
+// Get single item by index
+app.get('/api/item/:index', async (req, res) => {
     try {
         const index = parseInt(req.params.index);
         
-        if (isNaN(index) || index < 0 || index >= translatedData.length) {
+        if (isNaN(index) || index < 0 || index >= datasetInfo.total) {
             return res.status(404).json({ 
-                error: 'Item not found',
-                valid_range: `0 to ${translatedData.length - 1}`,
-                requested: index
+                error: 'Item index out of range',
+                valid_range: `0 to ${datasetInfo.total - 1}`,
+                requested_index: index
             });
         }
 
-        const item = translatedData[index];
-        const edit = humanEdits.find(e => parseInt(e.index) === index);
-        const lockedBy = itemLocks.get(index);
+        // Load item on-demand from Google Drive
+        const item = await loadItemByIndex(index);
+        const existingEdit = humanEdits.find(edit => parseInt(edit.index) === index);
+        const lockedByUser = itemLocks.get(index);
 
         res.json({
             index: index,
             Caption: item.Caption || '',
             image_url: item.image_url || '',
             translation: item.translation || '',
-            edited_translation: edit ? edit.edited_translation : (item.translation || ''),
-            human_edited: !!edit,
-            editor: edit ? edit.editor : null,
-            edit_timestamp: edit ? edit.timestamp : null,
-            quality_score: edit ? parseInt(edit.quality_score) || 5 : 5,
-            notes: edit ? edit.notes || '' : '',
-            locked: !!lockedBy,
-            locked_by: lockedBy || null,
+            edited_translation: existingEdit ? existingEdit.edited_translation : (item.translation || ''),
+            human_edited: !!existingEdit,
+            editor: existingEdit ? existingEdit.editor : null,
+            edit_timestamp: existingEdit ? existingEdit.timestamp : null,
+            quality_score: existingEdit ? parseInt(existingEdit.quality_score) || 5 : 5,
+            notes: existingEdit ? existingEdit.notes || '' : '',
+            locked: !!lockedByUser,
+            locked_by: lockedByUser || null,
             translation_complete: !!(item.translation && item.translation.trim()),
             has_potential_issues: item.translation && (
                 item.translation.includes('[ERROR]') || 
                 item.translation.length < 5 ||
                 item.translation === item.Caption
-            )
+            ),
+            metadata: {
+                cached: systemStats.cacheHits > 0,
+                load_source: itemCache.get(index) ? 'cache' : 'google_drive'
+            }
         });
     } catch (error) {
-        console.error('Get item error:', error);
-        res.status(500).json({ error: 'Failed to get item data' });
+        console.error(`Error loading item ${req.params.index}:`, error);
+        res.status(500).json({ 
+            error: 'Failed to load item', 
+            details: error.message,
+            index: parseInt(req.params.index) 
+        });
     }
 });
 
-// Lock item
+// Lock item for editing
 app.post('/api/lock/:index', (req, res) => {
     try {
         const index = parseInt(req.params.index);
         const { username } = req.body;
 
-        if (!username || typeof username !== 'string') {
-            return res.status(400).json({ error: 'Valid username required' });
+        if (!username || typeof username !== 'string' || username.trim() === '') {
+            return res.status(400).json({ error: 'Valid username is required' });
         }
 
-        if (isNaN(index) || index < 0 || index >= translatedData.length) {
-            return res.status(404).json({ error: 'Item not found' });
+        if (isNaN(index) || index < 0 || index >= datasetInfo.total) {
+            return res.status(404).json({ error: 'Invalid item index' });
         }
 
         const currentLock = itemLocks.get(index);
 
         if (currentLock && currentLock !== username) {
             return res.status(423).json({ 
-                error: 'Item locked by another user',
-                locked_by: currentLock
+                error: 'Item is locked by another user',
+                locked_by: currentLock,
+                message: `Item ${index} is currently being edited by ${currentLock}`
             });
         }
 
         itemLocks.set(index, username);
+        console.log(`🔒 Item ${index} locked by ${username}`);
         
-        // Auto-unlock after 10 minutes
+        // Auto-unlock after 10 minutes of inactivity
         setTimeout(() => {
             if (itemLocks.get(index) === username) {
                 itemLocks.delete(index);
-                console.log(`🔓 Auto-unlocked item ${index} for ${username}`);
+                console.log(`🔓 Auto-unlocked item ${index} (10 minute timeout)`);
             }
         }, 10 * 60 * 1000);
 
-        console.log(`🔒 Locked item ${index} for ${username}`);
         res.json({ 
             success: true,
-            locked_until: new Date(Date.now() + 10 * 60 * 1000).toISOString()
+            locked_by: username,
+            auto_unlock_at: new Date(Date.now() + 10 * 60 * 1000).toISOString()
         });
     } catch (error) {
         console.error('Lock item error:', error);
@@ -559,7 +834,7 @@ app.post('/api/unlock/:index', (req, res) => {
 
         if (itemLocks.get(index) === username) {
             itemLocks.delete(index);
-            console.log(`🔓 Unlocked item ${index} by ${username}`);
+            console.log(`🔓 Item ${index} unlocked by ${username}`);
         }
 
         res.json({ success: true });
@@ -569,7 +844,7 @@ app.post('/api/unlock/:index', (req, res) => {
     }
 });
 
-// Save edit
+// Save human edit
 app.post('/api/save', async (req, res) => {
     try {
         const { index, edited_translation, editor, notes, quality_score } = req.body;
@@ -577,23 +852,25 @@ app.post('/api/save', async (req, res) => {
         // Validation
         if (index === undefined || !edited_translation || !editor) {
             return res.status(400).json({ 
-                error: 'Missing required fields: index, edited_translation, editor' 
+                error: 'Missing required fields',
+                required: ['index', 'edited_translation', 'editor']
             });
         }
 
-        const actualIndex = parseInt(index);
-        if (isNaN(actualIndex) || actualIndex < 0 || actualIndex >= translatedData.length) {
-            return res.status(404).json({ error: 'Item not found' });
+        const itemIndex = parseInt(index);
+        if (isNaN(itemIndex) || itemIndex < 0 || itemIndex >= datasetInfo.total) {
+            return res.status(404).json({ error: 'Invalid item index' });
         }
 
-        const item = translatedData[actualIndex];
+        // Load original item to get original translation
+        const originalItem = await loadItemByIndex(itemIndex);
         
-        // Find or create edit
-        const existingEditIndex = humanEdits.findIndex(e => parseInt(e.index) === actualIndex);
+        // Find existing edit or create new one
+        const existingEditIndex = humanEdits.findIndex(edit => parseInt(edit.index) === itemIndex);
 
-        const editData = {
-            index: actualIndex,
-            original_translation: item.translation || '',
+        const editRecord = {
+            index: itemIndex,
+            original_translation: originalItem.translation || '',
             edited_translation: edited_translation.trim(),
             editor: editor.trim(),
             timestamp: new Date().toISOString(),
@@ -602,29 +879,33 @@ app.post('/api/save', async (req, res) => {
         };
 
         if (existingEditIndex !== -1) {
-            humanEdits[existingEditIndex] = editData;
-            console.log(`✏️ Updated edit for item ${actualIndex} by ${editor}`);
+            humanEdits[existingEditIndex] = editRecord;
+            console.log(`✏️ Updated edit for item ${itemIndex} by ${editor} (${editRecord.quality_score}⭐)`);
         } else {
-            humanEdits.push(editData);
-            console.log(`✅ New edit for item ${actualIndex} by ${editor} (${editData.quality_score}⭐)`);
+            humanEdits.push(editRecord);
+            console.log(`✅ New edit for item ${itemIndex} by ${editor} (${editRecord.quality_score}⭐)`);
         }
 
-        // Unlock item
-        itemLocks.delete(actualIndex);
+        // Unlock the item
+        itemLocks.delete(itemIndex);
 
-        // Save to Drive asynchronously
-        saveEditsToDrive().catch(err => 
-            console.error('Background save to Drive failed:', err.message)
+        // Save to Google Drive asynchronously
+        saveEditsToGoogleDrive().catch(saveError => 
+            console.error('Background save to Drive failed:', saveError.message)
         );
 
         res.json({ 
             success: true, 
-            edit: editData,
-            total_edits: humanEdits.length
+            edit: editRecord,
+            total_edits: humanEdits.length,
+            message: `Edit saved successfully for item ${itemIndex}`
         });
     } catch (error) {
         console.error('Save edit error:', error);
-        res.status(500).json({ error: 'Failed to save edit' });
+        res.status(500).json({ 
+            error: 'Failed to save edit', 
+            details: error.message 
+        });
     }
 });
 
@@ -634,94 +915,101 @@ app.post('/api/activity', (req, res) => {
         const { username, current_item } = req.body;
 
         if (!username || typeof username !== 'string') {
-            return res.status(400).json({ error: 'Valid username required' });
+            return res.status(400).json({ error: 'Valid username is required' });
         }
 
         const existingUser = activeUsers.get(username);
-        const now = new Date().toISOString();
+        const currentTime = new Date().toISOString();
 
         activeUsers.set(username, {
             username: username,
             current_item: parseInt(current_item) || 0,
-            last_active: now,
-            session_start: existingUser ? existingUser.session_start : now
+            last_active: currentTime,
+            session_start: existingUser ? existingUser.session_start : currentTime
         });
 
-        res.json({ success: true });
+        res.json({ 
+            success: true,
+            logged_activity: {
+                username: username,
+                current_item: parseInt(current_item) || 0,
+                timestamp: currentTime
+            }
+        });
     } catch (error) {
         console.error('Activity tracking error:', error);
-        res.status(500).json({ error: 'Failed to track activity' });
+        res.status(500).json({ error: 'Failed to track user activity' });
     }
 });
 
 // Export data
 app.get('/api/export', (req, res) => {
     try {
-        const format = req.query.format || 'complete';
-        
-        let exportData;
-        let filename;
+        const format = req.query.format || 'edits_only';
         
         if (format === 'edits_only') {
-            exportData = humanEdits;
-            filename = `yoruba_human_edits_${Date.now()}.csv`;
+            // Export human edits only (memory-safe)
+            if (humanEdits.length === 0) {
+                return res.status(404).json({ 
+                    error: 'No human edits available for export',
+                    suggestion: 'Start editing some items first'
+                });
+            }
+
+            const headers = [
+                'index', 'original_translation', 'edited_translation', 
+                'editor', 'timestamp', 'notes', 'quality_score'
+            ];
+            let csvContent = headers.join(',') + '\n';
+
+            humanEdits.forEach(edit => {
+                const row = headers.map(header => {
+                    const value = String(edit[header] || '');
+                    return '"' + value.replace(/"/g, '""') + '"';
+                });
+                csvContent += row.join(',') + '\n';
+            });
+
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const filename = `yoruba_human_edits_${timestamp}.csv`;
+            
+            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+            res.send(csvContent);
+
+            console.log(`📥 Export completed: ${filename} (${humanEdits.length} edits)`);
         } else {
-            // Complete merged dataset
-            exportData = translatedData.map((item, index) => {
-                const edit = humanEdits.find(e => parseInt(e.index) === index);
-                return {
-                    index: index,
-                    Caption: item.Caption || '',
-                    image_url: item.image_url || '',
-                    original_translation: item.translation || '',
-                    final_translation: edit ? edit.edited_translation : (item.translation || ''),
-                    human_edited: !!edit,
-                    editor: edit ? edit.editor : '',
-                    edit_timestamp: edit ? edit.timestamp : '',
-                    quality_score: edit ? edit.quality_score : '',
-                    notes: edit ? edit.notes : ''
-                };
+            // For complete dataset, recommend downloading from Google Drive
+            res.json({
+                message: 'Complete dataset export not available via web interface',
+                reason: 'Dataset is too large (250+ MB) for web export',
+                alternatives: {
+                    human_edits_only: `${req.protocol}://${req.get('host')}/api/export?format=edits_only`,
+                    google_drive_access: `https://drive.google.com/drive/folders/${DRIVE_FOLDER_ID}`,
+                    files_available: [
+                        'translated_1M_final.csv - Complete dataset with machine translations',
+                        'human_edits.csv - Human corrections and improvements'
+                    ]
+                },
+                instructions: 'Download both files from Google Drive and merge them locally for complete dataset'
             });
-            filename = `yoruba_final_dataset_${Date.now()}.csv`;
         }
-
-        if (exportData.length === 0) {
-            return res.status(404).json({ error: 'No data to export' });
-        }
-
-        // Convert to CSV
-        const headers = Object.keys(exportData[0]);
-        let csv = headers.join(',') + '\n';
-
-        exportData.forEach(row => {
-            const values = headers.map(header => {
-                const value = String(row[header] || '');
-                return '"' + value.replace(/"/g, '""') + '"';
-            });
-            csv += values.join(',') + '\n';
-        });
-
-        res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(csv);
-
-        console.log(`📥 Export generated: ${filename} (${exportData.length} rows)`);
     } catch (error) {
         console.error('Export error:', error);
-        res.status(500).json({ error: 'Export failed' });
+        res.status(500).json({ error: 'Export operation failed' });
     }
 });
 
-// Serve frontend
+// Serve main application
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Error handling middleware
+// Global error handler
 app.use((error, req, res, next) => {
-    console.error('🚨 Unhandled error:', {
+    console.error('🚨 Unhandled server error:', {
         message: error.message,
-        stack: error.stack,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
         url: req.url,
         method: req.method,
         timestamp: new Date().toISOString()
@@ -732,6 +1020,7 @@ app.use((error, req, res, next) => {
     if (!res.headersSent) {
         res.status(500).json({ 
             error: 'Internal server error',
+            message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong',
             timestamp: new Date().toISOString()
         });
     }
@@ -743,7 +1032,19 @@ app.use((req, res) => {
         res.status(404).json({ 
             error: 'Endpoint not found',
             method: req.method,
-            url: req.url
+            url: req.url,
+            available_endpoints: [
+                'GET /',
+                'GET /api/health',
+                'GET /api/stats',
+                'GET /api/item/:index',
+                'POST /api/lock/:index',
+                'POST /api/unlock/:index',
+                'POST /api/save',
+                'POST /api/activity',
+                'GET /api/export',
+                'GET /api/image-proxy?url=...'
+            ]
         });
     }
 });
@@ -751,101 +1052,123 @@ app.use((req, res) => {
 // Cleanup functions
 function cleanupInactiveUsers() {
     const now = Date.now();
-    let removedCount = 0;
+    let cleanedUp = 0;
     
-    for (const [username, data] of activeUsers.entries()) {
-        const lastActive = new Date(data.last_active).getTime();
-        if (now - lastActive > 15 * 60 * 1000) { // 15 minutes
+    for (const [username, userData] of activeUsers.entries()) {
+        const lastActiveTime = new Date(userData.last_active).getTime();
+        const inactiveMinutes = (now - lastActiveTime) / 1000 / 60;
+        
+        if (inactiveMinutes > 15) { // 15 minutes of inactivity
             activeUsers.delete(username);
-            removedCount++;
+            cleanedUp++;
         }
     }
     
-    if (removedCount > 0) {
-        console.log(`🧹 Cleaned up ${removedCount} inactive users`);
+    if (cleanedUp > 0) {
+        console.log(`🧹 Cleaned up ${cleanedUp} inactive users`);
     }
 }
 
-// Periodic tasks
+// Periodic maintenance tasks
 setInterval(cleanupInactiveUsers, 5 * 60 * 1000); // Every 5 minutes
-setInterval(syncData, 10 * 60 * 1000); // Every 10 minutes
+setInterval(performDataSync, 15 * 60 * 1000); // Every 15 minutes
 setInterval(() => {
+    // Auto-save edits
     if (humanEdits.length > 0) {
-        saveEditsToDrive().catch(err => 
-            console.error('Scheduled save failed:', err.message)
+        saveEditsToGoogleDrive().catch(error => 
+            console.error('Scheduled save failed:', error.message)
         );
     }
-}, 5 * 60 * 1000); // Every 5 minutes
+}, 10 * 60 * 1000); // Every 10 minutes
 
-// Graceful shutdown
+// Graceful shutdown handlers
 process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
 
-async function gracefulShutdown() {
-    console.log('\n📴 Shutting down gracefully...');
+async function gracefulShutdown(signal) {
+    console.log(`\n📴 Received ${signal}. Shutting down gracefully...`);
     
     // Save any pending edits
     if (humanEdits.length > 0) {
-        console.log('💾 Saving final edits...');
-        await saveEditsToDrive();
+        console.log('💾 Saving final edits before shutdown...');
+        await saveEditsToGoogleDrive();
     }
     
-    console.log('✅ Shutdown complete');
+    console.log('✅ Graceful shutdown completed');
     process.exit(0);
 }
 
-// Start server
+// Start the server
 async function startServer() {
-    console.log('🚀 Starting Yoruba Caption Editor Server...');
-    console.log(`📅 Date: ${new Date().toISOString()}`);
-    console.log(`👤 User: TamynatorSama`);
+    console.log('🔧 Initializing server components...');
     
     // Validate environment
     if (!DRIVE_FOLDER_ID) {
-        console.error('❌ DRIVE_FOLDER_ID not set in .env file');
+        console.error('❌ DRIVE_FOLDER_ID not configured in environment variables');
+        console.error('💡 Set DRIVE_FOLDER_ID in your .env file or hosting platform');
         process.exit(1);
     }
     
     // Initialize Google Drive
-    const driveInitialized = await initializeGoogleDrive();
-    if (!driveInitialized) {
-        console.error('❌ Failed to initialize Google Drive. Check credentials.json');
+    const driveReady = await initializeGoogleDrive();
+    if (!driveReady) {
+        console.error('❌ Google Drive initialization failed');
+        console.error('💡 Check your credentials and network connection');
         process.exit(1);
     }
     
-    // Load initial data
-    const syncSuccess = await syncData();
-    if (!syncSuccess) {
-        console.warn('⚠️ Initial data sync failed. Server will start with limited functionality.');
+    // Perform initial data sync
+    const syncSuccessful = await performDataSync();
+    if (!syncSuccessful) {
+        console.warn('⚠️ Initial data sync failed');
+        console.warn('💡 Server will start with limited functionality');
     }
     
-    // Start server
-    app.listen(PORT, () => {
-        console.log('\n' + '='.repeat(70));
-        console.log(`🌟 YORUBA CAPTION EDITOR SERVER RUNNING`);
-        console.log(`🌐 URL: http://localhost:${PORT}`);
-        console.log(`📊 Dataset: ${translatedData.length.toLocaleString()} items`);
-        console.log(`✏️ Edits: ${humanEdits.length.toLocaleString()}`);
-        console.log(`📁 Drive Folder: ${DRIVE_FOLDER_ID}`);
-        console.log(`🔄 Auto-sync: Every 10 minutes`);
-        console.log(`💾 Auto-save: Every 5 minutes`);
-        console.log('='.repeat(70));
+    // Start HTTP server
+    const server = app.listen(PORT, () => {
+        const memoryUsage = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+        
+        console.log('\n' + '='.repeat(80));
+        console.log('🌟 YORUBA CAPTION EDITOR - SERVER READY');
+        console.log(`📅 Started: 2025-10-16 02:15:07 UTC`);
+        console.log(`👤 Primary User: TamynatorSama`);
+        console.log(`🌐 Server URL: http://localhost:${PORT}`);
+        console.log(`📊 Dataset: ${datasetInfo.total?.toLocaleString() || 0} items`);
+        console.log(`✏️ Human Edits: ${humanEdits.length.toLocaleString()}`);
+        console.log(`💾 Memory Usage: ${memoryUsage}MB (optimized)`);
+        console.log(`📁 Google Drive Folder: ${DRIVE_FOLDER_ID}`);
+        console.log(`🔄 Auto-sync: Every 15 minutes`);
+        console.log(`💾 Auto-save: Every 10 minutes`);
+        console.log(`🧹 Cleanup: Every 5 minutes`);
+        console.log('='.repeat(80));
+        console.log('✅ Ready for collaborative Yoruba caption editing!');
+    });
+    
+    // Handle server errors
+    server.on('error', (error) => {
+        console.error('❌ Server error:', error);
+        if (error.code === 'EADDRINUSE') {
+            console.error(`💡 Port ${PORT} is already in use. Try a different port.`);
+        }
+        process.exit(1);
     });
 }
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
     console.error('💥 Uncaught Exception:', error);
+    console.error('Stack:', error.stack);
     process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-    console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
+    console.error('💥 Unhandled Promise Rejection:', reason);
+    console.error('Promise:', promise);
     systemStats.errorCount++;
 });
 
-// Start the application
+// Initialize and start the server
 startServer().catch((error) => {
-    console.error('💥 Failed to start server:', error);
+    console.error('💥 Server startup failed:', error);
     process.exit(1);
 });

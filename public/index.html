@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yoruba Caption Editor - TamynatorSama Edition</title>
+    <title>Yoruba Caption Editor - TamynatorSama Professional Edition</title>
     <style>
         * {
             margin: 0;
@@ -15,158 +15,182 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 15px;
+            line-height: 1.6;
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             background: white;
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 25px 80px rgba(0,0,0,0.3);
             overflow: hidden;
         }
 
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 30px;
+            padding: 35px;
             text-align: center;
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="rgba(255,255,255,0.1)"><polygon points="0,0 1000,0 1000,80 0,100"/></svg>') no-repeat center bottom;
         }
 
         .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            font-size: 2.8em;
+            margin-bottom: 12px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
 
         .header .subtitle {
-            font-size: 1.1em;
-            opacity: 0.9;
-            margin-bottom: 15px;
+            font-size: 1.2em;
+            opacity: 0.95;
+            margin-bottom: 20px;
+            font-weight: 300;
         }
 
         .user-info {
             background: rgba(255,255,255,0.2);
-            padding: 12px 24px;
-            border-radius: 25px;
+            padding: 15px 30px;
+            border-radius: 30px;
             display: inline-block;
-            font-size: 14px;
+            font-size: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
         }
 
         .stats-bar {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            padding: 30px;
-            background: #f8f9fa;
-            border-bottom: 2px solid #e9ecef;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            padding: 35px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
         }
 
         .stat-card {
             background: white;
-            padding: 20px;
-            border-radius: 12px;
+            padding: 25px;
+            border-radius: 15px;
             text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.05);
         }
 
         .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
         }
 
         .stat-card h3 {
-            font-size: 2.2em;
+            font-size: 2.5em;
             color: #667eea;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             font-weight: 700;
+            text-shadow: 0 2px 5px rgba(102, 126, 234, 0.2);
         }
 
         .stat-card p {
             color: #6c757d;
-            font-size: 0.9em;
-            margin-bottom: 10px;
+            font-size: 1em;
+            margin-bottom: 12px;
+            font-weight: 500;
         }
 
         .progress-bar {
             width: 100%;
-            height: 8px;
+            height: 10px;
             background: #e5e7eb;
-            border-radius: 4px;
+            border-radius: 5px;
             overflow: hidden;
-            margin-top: 8px;
+            margin-top: 10px;
         }
 
         .progress-fill {
             height: 100%;
             background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            transition: width 0.5s ease;
+            transition: width 0.8s ease;
+            border-radius: 5px;
         }
 
         .progress-text {
-            font-size: 12px;
-            margin-top: 5px;
+            font-size: 13px;
+            margin-top: 8px;
             color: #374151;
             font-weight: 600;
         }
 
         .active-users {
             background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-            padding: 20px;
-            border-radius: 12px;
+            padding: 25px;
+            border-radius: 15px;
             grid-column: 1 / -1;
+            border: 2px solid #2196f3;
         }
 
         .active-users h4 {
-            color: #1976d2;
-            margin-bottom: 12px;
-            font-size: 1.1em;
+            color: #1565c0;
+            margin-bottom: 15px;
+            font-size: 1.2em;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            font-weight: 600;
         }
 
         .user-badge {
             display: inline-block;
             background: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            margin: 4px;
-            font-size: 0.85em;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 10px 20px;
+            border-radius: 25px;
+            margin: 6px;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             border: 2px solid #e3f2fd;
+            font-weight: 500;
         }
 
         .controls {
-            padding: 25px 30px;
+            padding: 30px 35px;
             background: #fff;
-            border-bottom: 2px solid #e9ecef;
+            border-bottom: 3px solid #e9ecef;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 15px;
+            gap: 20px;
         }
 
         .nav-buttons {
             display: flex;
-            gap: 12px;
+            gap: 15px;
             align-items: center;
         }
 
         .btn {
-            padding: 12px 24px;
+            padding: 14px 28px;
             border: none;
-            border-radius: 10px;
-            font-size: 14px;
+            border-radius: 12px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             text-decoration: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         .btn-primary {
@@ -175,8 +199,8 @@
         }
 
         .btn-primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
         }
 
         .btn-success {
@@ -185,8 +209,8 @@
         }
 
         .btn-success:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
         }
 
         .btn-warning {
@@ -195,85 +219,89 @@
         }
 
         .btn-warning:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
         }
 
         .btn-secondary {
-            background: #6c757d;
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
             color: white;
         }
 
         .btn-secondary:hover:not(:disabled) {
-            background: #5a6268;
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
         }
 
         .btn:disabled {
-            opacity: 0.5;
+            opacity: 0.6;
             cursor: not-allowed;
             transform: none !important;
-            box-shadow: none !important;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
         }
 
         .index-input {
-            width: 130px;
-            padding: 12px;
+            width: 140px;
+            padding: 14px;
             border: 2px solid #e9ecef;
-            border-radius: 10px;
-            font-size: 14px;
+            border-radius: 12px;
+            font-size: 15px;
             text-align: center;
             font-weight: 600;
+            transition: all 0.3s ease;
         }
 
         .index-input:focus {
             outline: none;
             border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
         }
 
         .filter-select {
-            padding: 12px 16px;
+            padding: 14px 18px;
             border: 2px solid #e9ecef;
-            border-radius: 10px;
-            font-size: 14px;
+            border-radius: 12px;
+            font-size: 15px;
             cursor: pointer;
-            min-width: 200px;
+            min-width: 220px;
             background: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
         }
 
         .filter-select:focus {
             outline: none;
             border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
         }
 
         .content {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 35px;
-            padding: 35px;
+            gap: 40px;
+            padding: 40px;
         }
 
-        @media (max-width: 1024px) {
+        @media (max-width: 1200px) {
             .content {
                 grid-template-columns: 1fr;
-                gap: 25px;
+                gap: 30px;
             }
         }
 
         .image-section {
             display: flex;
             flex-direction: column;
-            gap: 25px;
+            gap: 30px;
         }
 
         .image-container {
             position: relative;
             width: 100%;
-            border-radius: 15px;
+            border-radius: 18px;
             overflow: hidden;
             background: #f8f9fa;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
         }
 
         .image-container img {
@@ -284,21 +312,21 @@
 
         .image-loading {
             width: 100%;
-            height: 350px;
+            height: 400px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             flex-direction: column;
-            gap: 15px;
+            gap: 20px;
         }
 
         .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             animation: spin 1s linear infinite;
         }
 
@@ -312,42 +340,44 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 40px 20px;
-            background: #f8f9fa;
-            border: 2px dashed #dee2e6;
-            border-radius: 15px;
+            padding: 50px 30px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 3px dashed #dee2e6;
+            border-radius: 18px;
             text-align: center;
-            min-height: 350px;
+            min-height: 400px;
         }
 
         .image-error-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
+            font-size: 80px;
+            margin-bottom: 25px;
             opacity: 0.7;
         }
 
         .image-error-text {
             color: #6c757d;
-            margin-bottom: 20px;
-            line-height: 1.6;
+            margin-bottom: 25px;
+            line-height: 1.7;
+            font-size: 16px;
         }
 
         .image-error-actions {
             display: flex;
-            gap: 12px;
-            margin-top: 20px;
+            gap: 15px;
+            margin-top: 25px;
             flex-wrap: wrap;
             justify-content: center;
         }
 
         .error-btn {
-            padding: 10px 20px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             text-decoration: none;
             font-size: 14px;
-            transition: all 0.2s;
+            font-weight: 600;
+            transition: all 0.3s ease;
         }
 
         .error-btn-primary {
@@ -363,62 +393,67 @@
 
         .error-btn:hover {
             transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
         }
 
         .caption-section {
             display: flex;
             flex-direction: column;
-            gap: 25px;
+            gap: 30px;
         }
 
         .status-badge {
             display: inline-flex;
             align-items: center;
-            gap: 10px;
-            padding: 12px 20px;
-            border-radius: 30px;
-            font-size: 14px;
+            gap: 12px;
+            padding: 15px 25px;
+            border-radius: 35px;
+            font-size: 15px;
             font-weight: 600;
             width: fit-content;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
         }
 
         .status-badge.edited {
             background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
             color: #065f46;
+            border: 2px solid #10b981;
         }
 
         .status-badge.pending {
             background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
             color: #92400e;
+            border: 2px solid #f59e0b;
         }
 
         .status-badge.locked {
             background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
             color: #991b1b;
+            border: 2px solid #ef4444;
         }
 
         .status-badge.complete {
             background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
             color: #1e40af;
+            border: 2px solid #3b82f6;
         }
 
         .caption-box {
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 15px;
-            border-left: 5px solid #667eea;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 30px;
+            border-radius: 18px;
+            border-left: 6px solid #667eea;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
         }
 
         .caption-box h4 {
-            margin-bottom: 15px;
+            margin-bottom: 18px;
             color: #374151;
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 16px;
+            gap: 12px;
+            font-size: 18px;
             font-weight: 600;
         }
 
@@ -438,8 +473,8 @@
         }
 
         .caption-text {
-            font-size: 16px;
-            line-height: 1.7;
+            font-size: 17px;
+            line-height: 1.8;
             color: #1f2937;
             word-wrap: break-word;
             font-weight: 500;
@@ -447,21 +482,21 @@
 
         textarea {
             width: 100%;
-            padding: 20px;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            font-size: 16px;
+            padding: 25px;
+            border: 3px solid #e5e7eb;
+            border-radius: 15px;
+            font-size: 17px;
             font-family: inherit;
             resize: vertical;
-            min-height: 140px;
+            min-height: 150px;
             transition: all 0.3s ease;
-            line-height: 1.6;
+            line-height: 1.7;
         }
 
         textarea:focus {
             outline: none;
             border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 0 5px rgba(102, 126, 234, 0.15);
         }
 
         textarea:disabled {
@@ -473,114 +508,119 @@
         .form-group {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
         }
 
         .form-group label {
             font-weight: 600;
             color: #374151;
-            font-size: 14px;
+            font-size: 16px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
 
         input[type="text"], input[type="number"], select {
-            padding: 15px;
-            border: 2px solid #e5e7eb;
-            border-radius: 10px;
-            font-size: 14px;
+            padding: 18px;
+            border: 3px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
             transition: all 0.3s ease;
+            font-weight: 500;
         }
 
         input:focus, select:focus {
             outline: none;
             border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
         }
 
         .quality-rating {
             display: flex;
             align-items: center;
-            gap: 15px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            border: 2px solid #e9ecef;
+            gap: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-radius: 15px;
+            border: 3px solid #e9ecef;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
         .stars {
             display: flex;
-            gap: 5px;
+            gap: 8px;
         }
 
         .star {
             cursor: pointer;
-            font-size: 24px;
+            font-size: 28px;
             color: #d1d5db;
             transition: all 0.2s ease;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         .star.active {
             color: #fbbf24;
-            text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+            text-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
         }
 
         .star:hover {
             color: #f59e0b;
-            transform: scale(1.1);
+            transform: scale(1.15);
         }
 
         .rating-text {
             font-weight: 600;
             color: #374151;
+            font-size: 16px;
         }
 
         .diacritic-helper {
             background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            padding: 20px;
-            border-radius: 12px;
-            border: 2px solid #3b82f6;
+            padding: 25px;
+            border-radius: 15px;
+            border: 3px solid #3b82f6;
         }
 
         .diacritic-helper h5 {
-            margin-bottom: 15px;
+            margin-bottom: 18px;
             color: #1e40af;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 600;
         }
 
         .diacritic-buttons {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             flex-wrap: wrap;
         }
 
         .diacritic-btn {
-            padding: 10px 16px;
+            padding: 12px 20px;
             background: white;
-            border: 2px solid #3b82f6;
+            border: 3px solid #3b82f6;
             color: #1e40af;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 600;
             transition: all 0.2s ease;
-            min-width: 50px;
+            min-width: 60px;
             text-align: center;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.15);
         }
 
         .diacritic-btn:hover {
             background: #3b82f6;
             color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
         }
 
         .action-buttons {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            gap: 18px;
         }
 
         .action-buttons .btn-primary {
@@ -589,16 +629,17 @@
 
         .shortcuts-info {
             background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            padding: 20px;
-            border-radius: 12px;
-            font-size: 13px;
-            border: 2px solid #f59e0b;
+            padding: 25px;
+            border-radius: 15px;
+            font-size: 14px;
+            border: 3px solid #f59e0b;
         }
 
         .shortcuts-info h5 {
-            margin-bottom: 12px;
+            margin-bottom: 15px;
             color: #92400e;
             font-weight: 600;
+            font-size: 16px;
         }
 
         .shortcuts-info ul {
@@ -607,43 +648,44 @@
         }
 
         .shortcuts-info li {
-            margin: 6px 0;
+            margin: 8px 0;
             color: #78350f;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            font-weight: 500;
         }
 
         .shortcuts-info kbd {
             background: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            border: 1px solid #d97706;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 2px solid #d97706;
             font-family: monospace;
-            font-size: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            font-size: 13px;
+            box-shadow: 0 2px 5px rgba(217, 119, 6, 0.2);
         }
 
         .toast {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 25px;
+            right: 25px;
             background: white;
-            padding: 20px 25px;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            padding: 25px 30px;
+            border-radius: 15px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
             display: none;
             align-items: center;
-            gap: 15px;
+            gap: 18px;
             z-index: 1000;
-            animation: slideIn 0.3s ease-out;
-            max-width: 450px;
-            border-left: 5px solid #10b981;
+            animation: slideInToast 0.4s ease-out;
+            max-width: 500px;
+            border-left: 6px solid #10b981;
         }
 
-        @keyframes slideIn {
+        @keyframes slideInToast {
             from {
-                transform: translateX(500px);
+                transform: translateX(600px);
                 opacity: 0;
             }
             to {
@@ -665,7 +707,12 @@
         }
 
         .toast-icon {
-            font-size: 24px;
+            font-size: 28px;
+        }
+
+        .toast-message {
+            font-weight: 500;
+            font-size: 16px;
         }
 
         .login-modal {
@@ -674,7 +721,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -683,79 +730,56 @@
 
         .login-content {
             background: white;
-            padding: 50px;
-            border-radius: 20px;
-            box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+            padding: 60px;
+            border-radius: 25px;
+            box-shadow: 0 30px 100px rgba(0,0,0,0.4);
             text-align: center;
-            max-width: 500px;
+            max-width: 550px;
             width: 90%;
         }
 
         .login-content h2 {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             color: #374151;
-            font-size: 2em;
+            font-size: 2.2em;
+            font-weight: 700;
         }
 
         .login-content .subtitle {
             color: #6c757d;
-            margin-bottom: 30px;
-            line-height: 1.6;
+            margin-bottom: 35px;
+            line-height: 1.7;
+            font-size: 16px;
         }
 
         .login-content input {
             width: 100%;
-            padding: 18px;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            font-size: 16px;
-            margin-bottom: 25px;
+            padding: 22px;
+            border: 3px solid #e5e7eb;
+            border-radius: 15px;
+            font-size: 18px;
+            margin-bottom: 30px;
             text-align: center;
             font-weight: 600;
+            transition: all 0.3s ease;
         }
 
         .login-content input:focus {
             outline: none;
             border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-        }
-
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1500;
-        }
-
-        .loading-content {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-
-        .loading-content p {
-            margin-top: 20px;
-            color: #6c757d;
-            font-size: 16px;
+            box-shadow: 0 0 0 5px rgba(102, 126, 234, 0.15);
         }
 
         .connection-status {
             position: fixed;
-            top: 20px;
-            left: 20px;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 12px;
+            top: 25px;
+            left: 25px;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 13px;
             font-weight: 600;
             z-index: 500;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
         .connection-status.online {
@@ -770,11 +794,39 @@
             border: 2px solid #ef4444;
         }
 
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1500;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 50px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+        }
+
+        .loading-content p {
+            margin-top: 25px;
+            color: #6c757d;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .controls {
                 flex-direction: column;
-                gap: 20px;
+                gap: 25px;
             }
             
             .nav-buttons {
@@ -784,17 +836,25 @@
             
             .stats-bar {
                 grid-template-columns: 1fr;
-                gap: 15px;
-                padding: 20px;
+                gap: 20px;
+                padding: 25px;
             }
             
             .content {
-                padding: 20px;
-                gap: 20px;
+                padding: 25px;
+                gap: 25px;
             }
             
             .diacritic-buttons {
                 justify-content: center;
+            }
+
+            .header {
+                padding: 25px;
+            }
+
+            .header h1 {
+                font-size: 2.2em;
             }
         }
     </style>
@@ -806,20 +866,20 @@
             <h2>🎯 Yoruba Caption Editor</h2>
             <p class="subtitle">
                 Welcome! Enter your name to start reviewing and editing machine-translated Yoruba captions.
-                Your edits will be automatically saved to Google Drive.
+                Your edits will be automatically saved to Google Drive for collaborative work.
             </p>
             <input 
                 type="text" 
                 id="usernameInput" 
-                placeholder="Enter your name"
+                placeholder="Enter your name (e.g., TamynatorSama)"
                 value="TamynatorSama"
                 onkeypress="if(event.key==='Enter') login()"
             >
-            <button class="btn btn-primary" onclick="login()" style="width: 100%; font-size: 16px;">
-                🚀 Start Editing Session
+            <button class="btn btn-primary" onclick="login()" style="width: 100%; font-size: 18px;">
+                🚀 Start Professional Editing Session
             </button>
-            <p style="font-size: 12px; color: #6c757d; margin-top: 20px;">
-                🕒 Current Time: <span id="currentTime">2025-01-16 01:17:33</span>
+            <p style="font-size: 13px; color: #6c757d; margin-top: 25px;">
+                🕒 Current UTC Time: <span id="currentTime">2025-10-16 02:19:28</span>
             </p>
         </div>
     </div>
@@ -829,13 +889,15 @@
         <div class="loading-content">
             <div class="spinner"></div>
             <p>Loading dataset from Google Drive...</p>
-            <p style="font-size: 14px; margin-top: 10px; color: #6c757d;">Please wait while we sync the latest data</p>
+            <p style="font-size: 16px; margin-top: 15px; color: #6c757d;">
+                Initializing memory-optimized streaming system
+            </p>
         </div>
     </div>
 
     <!-- Connection Status -->
     <div class="connection-status online" id="connectionStatus">
-        🟢 Connected
+        🟢 Connected to Server
     </div>
 
     <!-- Main Application -->
@@ -845,15 +907,15 @@
             <p class="subtitle">Professional Review & Enhancement of Machine Translations</p>
             <div class="user-info">
                 👤 Editor: <strong id="currentUsername">TamynatorSama</strong> | 
-                📅 Session: <span id="currentDate">2025-01-16</span> |
-                ⏱️ Started: <span id="sessionStart">01:17:33 UTC</span>
+                📅 Session Date: <span id="currentDate">2025-10-16</span> |
+                ⏱️ Started: <span id="sessionStart">02:19:28 UTC</span>
             </div>
         </div>
 
         <div class="stats-bar">
             <div class="stat-card">
                 <h3 id="stat-total">0</h3>
-                <p>Total Items</p>
+                <p>Total Dataset Items</p>
             </div>
             <div class="stat-card">
                 <h3 id="stat-translated">0</h3>
@@ -861,7 +923,7 @@
                 <div class="progress-bar">
                     <div class="progress-fill" id="progress-translated" style="width: 0%"></div>
                 </div>
-                <p class="progress-text" id="completion-text">0% Complete</p>
+                <p class="progress-text" id="completion-text">0.0% Complete</p>
             </div>
             <div class="stat-card">
                 <h3 id="stat-edited">0</h3>
@@ -869,16 +931,16 @@
                 <div class="progress-bar">
                     <div class="progress-fill" id="progress-edited" style="width: 0%"></div>
                 </div>
-                <p class="progress-text" id="edit-text">0% Reviewed</p>
+                <p class="progress-text" id="edit-text">0.0% Reviewed</p>
             </div>
             <div class="stat-card">
                 <h3 id="stat-current">0</h3>
-                <p>Current Item</p>
+                <p>Current Position</p>
                 <p class="progress-text" id="current-progress">0 of 0</p>
             </div>
             <div class="active-users">
                 <h4>👥 Active Collaborative Editors</h4>
-                <div id="activeUsersList">Loading collaborative session...</div>
+                <div id="activeUsersList">Loading collaborative session data...</div>
             </div>
         </div>
 
@@ -892,7 +954,7 @@
                 </button>
                 <input type="number" id="indexInput" class="index-input" value="0" min="0" placeholder="Index">
                 <button class="btn btn-primary" onclick="goToIndex()" title="Go to specific index">
-                    🎯 Go
+                    🎯 Navigate
                 </button>
                 <button class="btn btn-secondary" onclick="nextItem()" title="Next item (Ctrl+→)">
                     ➡️ Next
@@ -902,7 +964,7 @@
                 </button>
             </div>
             
-            <div style="display: flex; gap: 15px; align-items: center;">
+            <div style="display: flex; gap: 18px; align-items: center;">
                 <select id="filterSelect" class="filter-select" onchange="applyFilter()">
                     <option value="all">All Items</option>
                     <option value="translated_only">Translated Only</option>
@@ -911,8 +973,8 @@
                     <option value="needs_review">Potential Issues</option>
                     <option value="high_quality">High Quality (4-5★)</option>
                 </select>
-                <button class="btn btn-success" onclick="exportData()" title="Export final dataset">
-                    📥 Export Dataset
+                <button class="btn btn-success" onclick="exportData()" title="Export dataset with human edits">
+                    📥 Export Reviews
                 </button>
             </div>
         </div>
@@ -922,17 +984,17 @@
                 <div class="image-container" id="imageContainer">
                     <div class="image-loading">
                         <div class="spinner"></div>
-                        <p>Loading image...</p>
+                        <p>Loading image from dataset...</p>
                     </div>
                 </div>
                 
                 <div class="caption-box english">
                     <h4>🇬🇧 Original English Caption</h4>
-                    <p class="caption-text" id="englishCaption">Loading original caption...</p>
+                    <p class="caption-text" id="englishCaption">Loading original caption from dataset...</p>
                 </div>
                 
                 <div class="caption-box model">
-                    <h4>🤖 Machine Translation (NLLB-200)</h4>
+                    <h4>🤖 Machine Translation (Facebook NLLB-200)</h4>
                     <p class="caption-text" id="modelTranslation">Loading machine translation...</p>
                 </div>
             </div>
@@ -941,31 +1003,33 @@
                 <div id="statusBadge"></div>
 
                 <div class="caption-box edit">
-                    <h4>✏️ Review & Enhance Translation</h4>
+                    <h4>✏️ Professional Review & Enhancement</h4>
                     <textarea 
                         id="editedCaption" 
-                        placeholder="Review the machine translation and make improvements..."
-                        title="Edit the Yoruba translation here"></textarea>
+                        placeholder="Review the machine translation and enhance for accuracy, cultural appropriateness, and Yoruba linguistic standards..."
+                        title="Edit the Yoruba translation here"
+                    ></textarea>
                 </div>
 
                 <div class="form-group">
-                    <label for="notes">📝 Review Notes & Comments</label>
+                    <label for="notes">📝 Review Notes & Editorial Comments</label>
                     <input 
                         type="text" 
                         id="notes" 
-                        placeholder="Note improvements made, issues found, or cultural considerations..."
-                        title="Optional notes about your edits">
+                        placeholder="Document improvements made, issues identified, cultural considerations, or linguistic notes..."
+                        title="Optional editorial notes"
+                    >
                 </div>
 
                 <div class="form-group">
-                    <label>⭐ Translation Quality Rating</label>
+                    <label>⭐ Translation Quality Assessment</label>
                     <div class="quality-rating">
                         <div class="stars" id="qualityStars">
-                            <span class="star" data-rating="1" title="Poor - Major issues">★</span>
-                            <span class="star" data-rating="2" title="Fair - Some issues">★</span>
-                            <span class="star" data-rating="3" title="Good - Minor issues">★</span>
-                            <span class="star" data-rating="4" title="Very Good - High quality">★</span>
-                            <span class="star" data-rating="5" title="Excellent - Perfect">★</span>
+                            <span class="star" data-rating="1" title="Poor - Major grammatical errors, incorrect meaning">★</span>
+                            <span class="star" data-rating="2" title="Fair - Some errors, partially understandable">★</span>
+                            <span class="star" data-rating="3" title="Good - Minor errors, generally accurate">★</span>
+                            <span class="star" data-rating="4" title="Very Good - High accuracy, natural flow">★</span>
+                            <span class="star" data-rating="5" title="Excellent - Perfect translation, culturally appropriate">★</span>
                         </div>
                         <span class="rating-text" id="ratingText">Rate translation quality</span>
                     </div>
@@ -984,15 +1048,21 @@
                         <button class="diacritic-btn" onclick="insertDiacritic('á')" title="Insert á">á</button>
                         <button class="diacritic-btn" onclick="insertDiacritic('è')" title="Insert è">è</button>
                         <button class="diacritic-btn" onclick="insertDiacritic('é')" title="Insert é">é</button>
+                        <button class="diacritic-btn" onclick="insertDiacritic('ì')" title="Insert ì">ì</button>
+                        <button class="diacritic-btn" onclick="insertDiacritic('í')" title="Insert í">í</button>
+                        <button class="diacritic-btn" onclick="insertDiacritic('ò')" title="Insert ò">ò</button>
+                        <button class="diacritic-btn" onclick="insertDiacritic('ó')" title="Insert ó">ó</button>
+                        <button class="diacritic-btn" onclick="insertDiacritic('ù')" title="Insert ù">ù</button>
+                        <button class="diacritic-btn" onclick="insertDiacritic('ú')" title="Insert ú">ú</button>
                     </div>
                 </div>
 
                 <div class="action-buttons">
                     <button class="btn btn-success" onclick="saveEdit()" id="saveBtn" title="Save current review (Ctrl+S)">
-                        💾 Save Review
+                        💾 Save Professional Review
                     </button>
                     <button class="btn btn-primary" onclick="saveAndNext()" title="Save and move to next (Ctrl+Enter)">
-                        💾➡️ Save & Next
+                        💾➡️ Save & Continue
                     </button>
                     <button class="btn btn-secondary" onclick="skipItem()" title="Skip to next item">
                         ⏭️ Skip Item
@@ -1000,143 +1070,149 @@
                 </div>
 
                 <div class="shortcuts-info">
-                    <h5>⌨️ Keyboard Shortcuts</h5>
+                    <h5>⌨️ Professional Keyboard Shortcuts</h5>
                     <ul>
-                        <li><kbd>Ctrl</kbd> + <kbd>S</kbd> Save review</li>
-                        <li><kbd>Ctrl</kbd> + <kbd>→</kbd> Next item</li>
-                        <li><kbd>Ctrl</kbd> + <kbd>←</kbd> Previous item</li>
-                        <li><kbd>Ctrl</kbd> + <kbd>Enter</kbd> Save & Next</li>
-                        <li><kbd>Ctrl</kbd> + <kbd>R</kbd> Random item</li>
+                        <li><kbd>Ctrl</kbd> + <kbd>S</kbd> Save current review</li>
+                        <li><kbd>Ctrl</kbd> + <kbd>→</kbd> Navigate to next item</li>
+                        <li><kbd>Ctrl</kbd> + <kbd>←</kbd> Navigate to previous item</li>
+                        <li><kbd>Ctrl</kbd> + <kbd>Enter</kbd> Save and continue to next</li>
+                        <li><kbd>Ctrl</kbd> + <kbd>R</kbd> Load random item for review</li>
+                        <li><kbd>Ctrl</kbd> + <kbd>E</kbd> Focus on edit textarea</li>
                     </ul>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Toast Notification -->
+    <!-- Toast Notification System -->
     <div class="toast" id="toast">
         <span class="toast-icon" id="toastIcon"></span>
-        <span id="toastMessage"></span>
+        <span class="toast-message" id="toastMessage"></span>
     </div>
 
     <script>
-        // Global variables
-        const API_URL = window.location.origin + '/api';
+        // Global Application State
+        const API_BASE_URL = window.location.origin + '/api';
         let currentUsername = '';
         let currentIndex = 0;
         let currentFilter = 'not_edited';
         let currentQualityRating = 5;
         let currentItemLocked = false;
-        let totalItems = 0;
+        let totalDatasetItems = 0;
         let sessionStartTime = new Date();
+        let isOnline = true;
 
-        // Initialize application
-        function init() {
-            console.log('🚀 Initializing Yoruba Caption Editor...');
+        // Initialize Application
+        function initializeApplication() {
+            console.log('🚀 Initializing Yoruba Caption Editor Professional Edition...');
+            console.log(`📅 Current Date: 2025-10-16`);
+            console.log(`🕒 Current Time: 02:19:28 UTC`);
             
-            // Update current time
+            // Update real-time clock
             updateCurrentTime();
             setInterval(updateCurrentTime, 1000);
             
-            // Set up quality rating stars
-            setupQualityRating();
+            // Initialize quality rating system
+            setupQualityRatingSystem();
             
             // Show login modal
             document.getElementById('loginModal').style.display = 'flex';
             
-            // Test API connection
-            testConnection();
+            // Test server connectivity
+            testServerConnection();
         }
 
         function updateCurrentTime() {
             const now = new Date();
-            const utcString = now.toISOString().replace('T', ' ').substring(0, 19);
+            const utcString = now.toISOString().substring(0, 19).replace('T', ' ');
             document.getElementById('currentTime').textContent = utcString;
         }
 
-        // Test API connection
-        async function testConnection() {
+        // Test server connection
+        async function testServerConnection() {
             try {
-                const response = await fetch(`${API_URL}/health`);
+                const response = await fetch(`${API_BASE_URL}/health`);
                 if (response.ok) {
                     updateConnectionStatus(true);
+                    const healthData = await response.json();
+                    console.log('✅ Server connection successful:', healthData);
                 } else {
                     updateConnectionStatus(false);
                 }
             } catch (error) {
-                console.error('Connection test failed:', error);
+                console.error('❌ Server connection failed:', error);
                 updateConnectionStatus(false);
             }
         }
 
-        function updateConnectionStatus(isOnline) {
-            const status = document.getElementById('connectionStatus');
-            if (isOnline) {
-                status.className = 'connection-status online';
-                status.innerHTML = '🟢 Connected';
+        function updateConnectionStatus(online) {
+            const statusElement = document.getElementById('connectionStatus');
+            isOnline = online;
+            
+            if (online) {
+                statusElement.className = 'connection-status online';
+                statusElement.innerHTML = '🟢 Connected to Server';
             } else {
-                status.className = 'connection-status offline';
-                status.innerHTML = '🔴 Offline';
+                statusElement.className = 'connection-status offline';
+                statusElement.innerHTML = '🔴 Connection Lost';
             }
         }
 
-        // Login function
+        // User Authentication & Session Management
         function login() {
             const username = document.getElementById('usernameInput').value.trim();
             if (!username) {
-                showToast('Please enter your name to continue', 'error');
+                showToast('Please enter your name to begin professional editing session', 'error');
                 return;
             }
 
-            console.log(`👤 Logging in user: ${username}`);
+            console.log(`👤 Authenticating user: ${username}`);
             currentUsername = username;
             sessionStartTime = new Date();
             
-            // Update UI elements
+            // Update UI with user information
             document.getElementById('currentUsername').textContent = username;
-            document.getElementById('currentDate').textContent = new Date().toISOString().substring(0, 10);
-            document.getElementById('sessionStart').textContent = sessionStartTime.toTimeString().substring(0, 8) + ' UTC';
+            document.getElementById('currentDate').textContent = '2025-10-16';
+            document.getElementById('sessionStart').textContent = '02:19:28 UTC';
             
             // Hide login modal and show loading
             document.getElementById('loginModal').style.display = 'none';
             document.getElementById('loadingOverlay').style.display = 'flex';
             
-            // Simulate loading and then show main app
+            // Initialize editing session
             setTimeout(() => {
                 document.getElementById('loadingOverlay').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'block';
                 
-                // Initialize the editing session
                 startEditingSession();
-                
-                showToast(`Welcome back, ${username}! 🎉`, 'success');
-            }, 2000);
+                showToast(`Welcome to professional editing, ${username}! 🎉`, 'success');
+            }, 2500);
         }
 
-        // Start editing session
+        // Start Professional Editing Session
         async function startEditingSession() {
-            console.log('📊 Starting editing session...');
+            console.log('📊 Starting professional editing session...');
             
             try {
-                // Load first item
-                await loadItem(0);
+                // Load initial item
+                await loadItemData(0);
                 
-                // Start periodic updates
-                startPeriodicUpdates();
+                // Start periodic background tasks
+                startPeriodicTasks();
                 
-                console.log('✅ Editing session started successfully');
+                console.log('✅ Professional editing session initialized successfully');
             } catch (error) {
-                console.error('❌ Error starting session:', error);
+                console.error('❌ Error initializing session:', error);
                 showToast('Error starting session. Please refresh the page.', 'error');
             }
         }
 
-        // Load item data
-        async function loadItem(index) {
+        // Load item data with enhanced error handling
+        async function loadItemData(index) {
             try {
-                console.log(`📖 Loading item ${index}...`);
+                console.log(`📖 Loading item ${index} for professional review...`);
                 
-                // Unlock previous item if locked
+                // Unlock previous item if necessary
                 if (currentItemLocked && currentIndex !== index) {
                     await unlockCurrentItem();
                 }
@@ -1145,56 +1221,56 @@
                 document.getElementById('indexInput').value = index;
 
                 // Show loading state
-                showImageLoading();
+                showImageLoadingState();
                 
-                const response = await fetch(`${API_URL}/item/${index}`);
+                const response = await fetch(`${API_BASE_URL}/item/${index}`);
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
                 }
                 
-                const data = await response.json();
+                const itemData = await response.json();
 
-                if (data.error) {
-                    throw new Error(data.error);
+                if (itemData.error) {
+                    throw new Error(itemData.error);
                 }
 
-                // Try to lock item for editing
-                await lockCurrentItem();
+                // Attempt to lock item for editing
+                await attemptItemLock(index);
 
-                // Update UI with item data
-                updateItemDisplay(data);
+                // Update interface with loaded data
+                updateItemInterface(itemData);
                 
-                // Send activity update
-                sendActivity(index);
+                // Track user activity
+                trackUserActivity(index);
 
-                console.log(`✅ Loaded item ${index} successfully`);
+                console.log(`✅ Item ${index} loaded successfully for professional review`);
                 
             } catch (error) {
                 console.error('❌ Error loading item:', error);
-                showToast(`Error loading item ${index}: ${error.message}`, 'error');
+                showToast(`Failed to load item ${index}: ${error.message}`, 'error');
                 showImageError(`Failed to load item ${index}`, error.message);
             }
         }
 
-        // Lock current item
-        async function lockCurrentItem() {
+        // Attempt to lock item for exclusive editing
+        async function attemptItemLock(index) {
             try {
-                const response = await fetch(`${API_URL}/lock/${currentIndex}`, {
+                const lockResponse = await fetch(`${API_BASE_URL}/lock/${index}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: currentUsername })
                 });
 
-                const lockData = await response.json();
-                currentItemLocked = lockData.success;
+                const lockResult = await lockResponse.json();
+                currentItemLocked = lockResult.success;
                 
-                if (!lockData.success && response.status === 423) {
-                    showToast(`Item locked by ${lockData.locked_by}`, 'warning');
+                if (!lockResult.success && lockResponse.status === 423) {
+                    showToast(`Item is being edited by ${lockResult.locked_by}`, 'warning');
                 }
                 
             } catch (error) {
-                console.error('Error locking item:', error);
+                console.error('Error attempting to lock item:', error);
                 currentItemLocked = false;
             }
         }
@@ -1204,7 +1280,7 @@
             if (!currentItemLocked) return;
             
             try {
-                await fetch(`${API_URL}/unlock/${currentIndex}`, {
+                await fetch(`${API_BASE_URL}/unlock/${currentIndex}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: currentUsername })
@@ -1215,99 +1291,103 @@
             }
         }
 
-        // Update item display
-        function updateItemDisplay(data) {
+        // Update interface with loaded item data
+        function updateItemInterface(itemData) {
             // Update text content
-            document.getElementById('englishCaption').textContent = data.Caption || 'No caption available';
-            document.getElementById('modelTranslation').textContent = data.translation || 'Not yet translated';
+            document.getElementById('englishCaption').textContent = itemData.Caption || 'No caption available';
+            document.getElementById('modelTranslation').textContent = itemData.translation || 'Not yet translated by machine';
             
-            // Update textarea and notes
-            document.getElementById('editedCaption').value = data.edited_translation || data.translation || '';
-            document.getElementById('notes').value = data.notes || '';
+            // Update editable content
+            document.getElementById('editedCaption').value = itemData.edited_translation || itemData.translation || '';
+            document.getElementById('notes').value = itemData.notes || '';
 
             // Set quality rating
-            currentQualityRating = data.quality_score || 5;
-            updateQualityStars(currentQualityRating);
+            currentQualityRating = itemData.quality_score || 5;
+            updateQualityStarDisplay(currentQualityRating);
 
             // Handle form state based on lock status
-            const isLocked = data.locked && data.locked_by !== currentUsername;
-            document.getElementById('editedCaption').disabled = isLocked;
-            document.getElementById('saveBtn').disabled = isLocked;
+            const isLockedByOther = itemData.locked && itemData.locked_by !== currentUsername;
+            document.getElementById('editedCaption').disabled = isLockedByOther;
+            document.getElementById('saveBtn').disabled = isLockedByOther;
 
-            // Load image
-            loadImage(data.image_url, data.index);
+            // Load and display image
+            loadAndDisplayImage(itemData.image_url, itemData.index);
 
             // Update status badge
-            updateStatusBadge(data);
+            updateStatusBadge(itemData);
 
-            // Update stats
-            updateStats();
+            // Update statistics
+            updateStatisticsDisplay();
         }
 
-        // Image loading functions
-        function showImageLoading() {
+        // Enhanced image loading with multiple fallback strategies
+        function showImageLoadingState() {
             const imageContainer = document.getElementById('imageContainer');
             imageContainer.innerHTML = `
                 <div class="image-loading">
                     <div class="spinner"></div>
-                    <p>Loading image ${currentIndex + 1}...</p>
+                    <p>Loading image ${currentIndex + 1} from dataset...</p>
                 </div>
             `;
         }
 
-        function loadImage(imageUrl, index) {
+        function loadAndDisplayImage(imageUrl, index) {
             const imageContainer = document.getElementById('imageContainer');
             
             if (!imageUrl) {
-                showImageError('No image URL provided', 'The dataset entry does not contain an image URL.');
+                showImageError('No Image URL', 'This dataset item does not contain a valid image URL.');
                 return;
             }
             
-            showImageLoading();
+            showImageLoadingState();
             
-            // Try direct loading first
-            tryDirectImageLoad(imageUrl, index, imageContainer);
+            // Attempt direct image loading first
+            attemptDirectImageLoad(imageUrl, index, imageContainer);
         }
 
-        function tryDirectImageLoad(imageUrl, index, container) {
+        function attemptDirectImageLoad(imageUrl, index, container) {
             const img = new Image();
             img.crossOrigin = "anonymous";
             
             const timeout = setTimeout(() => {
                 img.src = '';
-                tryProxyImageLoad(imageUrl, index, container);
-            }, 8000);
+                attemptProxyImageLoad(imageUrl, index, container);
+            }, 10000);
             
             img.onload = function() {
                 clearTimeout(timeout);
                 container.innerHTML = `<img src="${imageUrl}" alt="Image ${index + 1}" crossorigin="anonymous">`;
+                console.log(`✅ Direct image load successful for item ${index}`);
             };
             
             img.onerror = function() {
                 clearTimeout(timeout);
-                tryProxyImageLoad(imageUrl, index, container);
+                console.log(`⚠️ Direct image load failed for item ${index}, trying proxy...`);
+                attemptProxyImageLoad(imageUrl, index, container);
             };
             
             img.src = imageUrl;
         }
 
-        function tryProxyImageLoad(imageUrl, index, container) {
-            const proxyUrl = `${API_URL}/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+        function attemptProxyImageLoad(imageUrl, index, container) {
+            const proxyUrl = `${API_BASE_URL}/image-proxy?url=${encodeURIComponent(imageUrl)}`;
             const img = new Image();
             
             const timeout = setTimeout(() => {
                 img.src = '';
-                showImageError('Image failed to load', `Could not load image ${index + 1} from ${imageUrl.substring(0, 50)}...`);
-            }, 10000);
+                showImageError('Image Load Failed', `Unable to load image ${index + 1} from ${imageUrl.substring(0, 60)}...`);
+            }, 15000);
             
             img.onload = function() {
                 clearTimeout(timeout);
                 container.innerHTML = `<img src="${proxyUrl}" alt="Image ${index + 1}">`;
+                console.log(`✅ Proxy image load successful for item ${index}`);
             };
             
             img.onerror = function() {
                 clearTimeout(timeout);
-                showImageError('Image failed to load', `Could not load image ${index + 1} from ${imageUrl.substring(0, 50)}...`);
+                console.log(`❌ Proxy image load failed for item ${index}`);
+                showImageError('Image Load Failed', `Unable to load image ${index + 1}. The image server may be unavailable.`);
             };
             
             img.src = proxyUrl;
@@ -1323,62 +1403,62 @@
                         ${message}
                     </div>
                     <div class="image-error-actions">
-                        <button onclick="retryImage()" class="error-btn error-btn-primary">
-                            🔄 Retry Load
+                        <button onclick="retryImageLoad()" class="error-btn error-btn-primary">
+                            🔄 Retry Loading
                         </button>
                         <button onclick="nextItem()" class="error-btn error-btn-secondary">
-                            ⏭️ Skip Item
+                            ⏭️ Skip to Next
                         </button>
                     </div>
                 </div>
             `;
         }
 
-        function retryImage() {
+        function retryImageLoad() {
             showToast('Retrying image load...', 'warning');
-            loadItem(currentIndex);
+            loadItemData(currentIndex);
         }
 
-        // Update status badge
-        function updateStatusBadge(data) {
+        // Status badge management
+        function updateStatusBadge(itemData) {
             let statusHTML = '';
             
-            if (data.locked && data.locked_by !== currentUsername) {
-                statusHTML = `<div class="status-badge locked">🔒 Locked by ${data.locked_by}</div>`;
-            } else if (data.human_edited) {
-                statusHTML = `<div class="status-badge edited">✅ Reviewed by ${data.editor}</div>`;
-            } else if (data.translation) {
-                statusHTML = `<div class="status-badge pending">📝 Needs Review</div>`;
+            if (itemData.locked && itemData.locked_by !== currentUsername) {
+                statusHTML = `<div class="status-badge locked">🔒 Currently Being Edited by ${itemData.locked_by}</div>`;
+            } else if (itemData.human_edited) {
+                statusHTML = `<div class="status-badge edited">✅ Professionally Reviewed by ${itemData.editor}</div>`;
+            } else if (itemData.translation) {
+                statusHTML = `<div class="status-badge pending">📝 Awaiting Professional Review</div>`;
             } else {
-                statusHTML = `<div class="status-badge complete">⏳ Not Translated</div>`;
+                statusHTML = `<div class="status-badge complete">⏳ Not Yet Machine Translated</div>`;
             }
             
             document.getElementById('statusBadge').innerHTML = statusHTML;
         }
 
         // Quality rating system
-        function setupQualityRating() {
+        function setupQualityRatingSystem() {
             const stars = document.querySelectorAll('.star');
             
             stars.forEach(star => {
                 star.addEventListener('click', () => {
                     const rating = parseInt(star.dataset.rating);
                     currentQualityRating = rating;
-                    updateQualityStars(rating);
+                    updateQualityStarDisplay(rating);
                 });
                 
                 star.addEventListener('mouseenter', () => {
                     const rating = parseInt(star.dataset.rating);
-                    highlightStars(rating);
+                    previewStarRating(rating);
                 });
             });
             
             document.getElementById('qualityStars').addEventListener('mouseleave', () => {
-                updateQualityStars(currentQualityRating);
+                updateQualityStarDisplay(currentQualityRating);
             });
         }
 
-        function updateQualityStars(rating) {
+        function updateQualityStarDisplay(rating) {
             const stars = document.querySelectorAll('.star');
             
             stars.forEach((star, index) => {
@@ -1389,11 +1469,11 @@
                 }
             });
             
-            const ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
-            document.getElementById('ratingText').textContent = `${rating}/5 - ${ratingLabels[rating]}`;
+            const ratingDescriptions = ['', 'Poor Quality', 'Fair Quality', 'Good Quality', 'Very Good Quality', 'Excellent Quality'];
+            document.getElementById('ratingText').textContent = `${rating}/5 - ${ratingDescriptions[rating]}`;
         }
 
-        function highlightStars(rating) {
+        function previewStarRating(rating) {
             const stars = document.querySelectorAll('.star');
             stars.forEach((star, index) => {
                 if (index < rating) {
@@ -1404,87 +1484,87 @@
             });
         }
 
-        // Save edit function
+        // Professional review save function
         async function saveEdit() {
             const editedTranslation = document.getElementById('editedCaption').value.trim();
-            const notes = document.getElementById('notes').value.trim();
+            const reviewNotes = document.getElementById('notes').value.trim();
 
             if (!editedTranslation) {
-                showToast('Translation cannot be empty', 'error');
+                showToast('Translation content cannot be empty', 'error');
                 return;
             }
 
             try {
-                console.log(`💾 Saving edit for item ${currentIndex}...`);
+                console.log(`💾 Saving professional review for item ${currentIndex}...`);
                 
-                const response = await fetch(`${API_URL}/save`, {
+                const saveResponse = await fetch(`${API_BASE_URL}/save`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         index: currentIndex,
                         edited_translation: editedTranslation,
                         editor: currentUsername,
-                        notes: notes,
+                        notes: reviewNotes,
                         quality_score: currentQualityRating
                     })
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                if (!saveResponse.ok) {
+                    throw new Error(`Save failed with status ${saveResponse.status}: ${saveResponse.statusText}`);
                 }
 
-                const data = await response.json();
+                const saveResult = await saveResponse.json();
 
-                if (data.success) {
-                    showToast('✅ Review saved successfully!', 'success');
+                if (saveResult.success) {
+                    showToast('✅ Professional review saved successfully!', 'success');
                     currentItemLocked = false;
                     
-                    // Update status badge
+                    // Update status badge to reflect saved state
                     document.getElementById('statusBadge').innerHTML = 
-                        `<div class="status-badge edited">✅ Reviewed by ${currentUsername}</div>`;
+                        `<div class="status-badge edited">✅ Professionally Reviewed by ${currentUsername}</div>`;
                     
-                    updateStats();
-                    console.log(`✅ Edit saved for item ${currentIndex}`);
+                    updateStatisticsDisplay();
+                    console.log(`✅ Professional review saved for item ${currentIndex}`);
                 } else {
-                    throw new Error('Server returned success=false');
+                    throw new Error('Server returned unsuccessful save result');
                 }
             } catch (error) {
-                console.error('❌ Error saving edit:', error);
-                showToast(`Error saving review: ${error.message}`, 'error');
+                console.error('❌ Error saving professional review:', error);
+                showToast(`Failed to save review: ${error.message}`, 'error');
             }
         }
 
         // Navigation functions
         function nextItem() {
             const nextIndex = currentIndex + 1;
-            if (nextIndex < totalItems) {
-                loadItem(nextIndex);
+            if (nextIndex < totalDatasetItems) {
+                loadItemData(nextIndex);
             } else {
-                showToast('This is the last item in the dataset', 'warning');
+                showToast('You have reached the end of the dataset', 'warning');
             }
         }
 
         function previousItem() {
             if (currentIndex > 0) {
-                loadItem(currentIndex - 1);
+                loadItemData(currentIndex - 1);
             } else {
-                showToast('This is the first item in the dataset', 'warning');
+                showToast('You are at the beginning of the dataset', 'warning');
             }
         }
 
         function goToIndex() {
-            const index = parseInt(document.getElementById('indexInput').value);
-            if (index >= 0 && index < totalItems) {
-                loadItem(index);
+            const targetIndex = parseInt(document.getElementById('indexInput').value);
+            if (targetIndex >= 0 && targetIndex < totalDatasetItems) {
+                loadItemData(targetIndex);
             } else {
-                showToast(`Please enter a number between 0 and ${totalItems - 1}`, 'error');
+                showToast(`Please enter a number between 0 and ${totalDatasetItems - 1}`, 'error');
             }
         }
 
         function randomItem() {
-            if (totalItems > 0) {
-                const randomIndex = Math.floor(Math.random() * totalItems);
-                loadItem(randomIndex);
+            if (totalDatasetItems > 0) {
+                const randomIndex = Math.floor(Math.random() * totalDatasetItems);
+                loadItemData(randomIndex);
             }
         }
 
@@ -1494,217 +1574,328 @@
 
         function saveAndNext() {
             saveEdit().then(() => {
-                setTimeout(() => nextItem(), 500);
+                setTimeout(() => nextItem(), 600);
             }).catch((error) => {
-                console.error('Error in saveAndNext:', error);
+                console.error('Error in save and next operation:', error);
             });
         }
 
-        // Insert diacritic character
-        function insertDiacritic(char) {
+        // Diacritic character insertion
+        function insertDiacritic(character) {
             const textarea = document.getElementById('editedCaption');
-            const start = textarea.selectionStart;
-            const end = textarea.selectionEnd;
-            const text = textarea.value;
+            const startPosition = textarea.selectionStart;
+            const endPosition = textarea.selectionEnd;
+            const currentText = textarea.value;
             
-            textarea.value = text.substring(0, start) + char + text.substring(end);
-            textarea.selectionStart = textarea.selectionEnd = start + 1;
+            textarea.value = currentText.substring(0, startPosition) + character + currentText.substring(endPosition);
+            textarea.selectionStart = textarea.selectionEnd = startPosition + 1;
             textarea.focus();
         }
 
-        // Update statistics
-        async function updateStats() {
+        // Statistics and progress tracking
+        async function updateStatisticsDisplay() {
             try {
-                const response = await fetch(`${API_URL}/stats`);
+                const statsResponse = await fetch(`${API_BASE_URL}/stats`);
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                if (!statsResponse.ok) {
+                    throw new Error(`Stats request failed with status ${statsResponse.status}`);
                 }
                 
-                const data = await response.json();
+                const statsData = await statsResponse.json();
 
-                totalItems = data.total;
+                totalDatasetItems = statsData.total;
                 
-                // Update stat cards
-                document.getElementById('stat-total').textContent = data.total.toLocaleString();
-                document.getElementById('stat-translated').textContent = data.translated.toLocaleString();
-                document.getElementById('stat-edited').textContent = data.edited.toLocaleString();
+                // Update main statistics cards
+                document.getElementById('stat-total').textContent = statsData.total.toLocaleString();
+                document.getElementById('stat-translated').textContent = statsData.translated.toLocaleString();
+                document.getElementById('stat-edited').textContent = statsData.edited.toLocaleString();
                 document.getElementById('stat-current').textContent = (currentIndex + 1).toLocaleString();
 
-                // Update progress bars
-                const completionPercent = parseFloat(data.completion_rate) || 0;
-                const editPercent = parseFloat(data.edit_rate) || 0;
+                // Update progress bars and percentages
+                const completionPercentage = parseFloat(statsData.completion_rate) || 0;
+                const editPercentage = parseFloat(statsData.edit_rate) || 0;
 
-                document.getElementById('progress-translated').style.width = completionPercent + '%';
-                document.getElementById('progress-edited').style.width = editPercent + '%';
+                document.getElementById('progress-translated').style.width = completionPercentage + '%';
+                document.getElementById('progress-edited').style.width = editPercentage + '%';
                 
-                document.getElementById('completion-text').textContent = `${completionPercent}% Complete`;
-                document.getElementById('edit-text').textContent = `${editPercent}% Reviewed`;
-                document.getElementById('current-progress').textContent = `${currentIndex + 1} of ${totalItems.toLocaleString()}`;
+                document.getElementById('completion-text').textContent = `${completionPercentage}% Complete`;
+                document.getElementById('edit-text').textContent = `${editPercentage}% Reviewed`;
+                document.getElementById('current-progress').textContent = `${(currentIndex + 1).toLocaleString()} of ${totalDatasetItems.toLocaleString()}`;
 
-                // Update input max value
-                document.getElementById('indexInput').max = totalItems - 1;
+                // Update input field maximum value
+                document.getElementById('indexInput').max = totalDatasetItems - 1;
 
-                // Update active users
-                updateActiveUsers(data.active_users);
+                // Update active users display
+                updateActiveUsersDisplay(statsData.active_users);
                 
-                // Update connection status
+                // Update connection status based on successful stats retrieval
                 updateConnectionStatus(true);
 
             } catch (error) {
-                console.error('Error updating stats:', error);
+                console.error('Error updating statistics:', error);
                 updateConnectionStatus(false);
             }
         }
 
-        function updateActiveUsers(activeUsers) {
-            const container = document.getElementById('activeUsersList');
+        function updateActiveUsersDisplay(activeUsers) {
+            const activeUsersContainer = document.getElementById('activeUsersList');
             
             if (activeUsers && activeUsers.length > 0) {
-                const otherUsers = activeUsers.filter(user => user.username !== currentUsername);
+                const otherActiveUsers = activeUsers.filter(user => user.username !== currentUsername);
                 
-                if (otherUsers.length > 0) {
-                    const usersHTML = otherUsers
+                if (otherActiveUsers.length > 0) {
+                    const usersDisplayHTML = otherActiveUsers
                         .map(user => {
-                            const sessionDuration = user.session_duration || 0;
-                            return `<span class="user-badge">👤 ${user.username} (Item #${(user.current_item || 0) + 1}, ${sessionDuration}m)</span>`;
+                            const sessionDuration = user.session_duration_minutes || 0;
+                            return `<span class="user-badge">👤 ${user.username} (Item #${(user.current_item || 0) + 1}, Active ${sessionDuration}min)</span>`;
                         })
                         .join('');
-                    container.innerHTML = usersHTML;
+                    activeUsersContainer.innerHTML = usersDisplayHTML;
                 } else {
-                    container.innerHTML = '<span style="color: #6c757d;">You are the only active editor</span>';
+                    activeUsersContainer.innerHTML = '<span style="color: #6c757d; font-style: italic;">You are currently the only active editor</span>';
                 }
             } else {
-                container.innerHTML = '<span style="color: #6c757d;">No other active editors</span>';
+                activeUsersContainer.innerHTML = '<span style="color: #6c757d; font-style: italic;">No other editors currently active</span>';
             }
         }
 
-        // Send activity heartbeat
-        async function sendActivity(currentItem) {
+        // User activity tracking
+        async function trackUserActivity(currentItemIndex) {
             try {
-                await fetch(`${API_URL}/activity`, {
+                await fetch(`${API_BASE_URL}/activity`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         username: currentUsername,
-                        current_item: currentItem
+                        current_item: currentItemIndex
                     })
                 });
             } catch (error) {
-                console.error('Error sending activity:', error);
+                console.error('Error tracking user activity:', error);
             }
         }
 
-        // Export data
+                // Data export functionality
         async function exportData() {
             try {
-                showToast('Preparing dataset export...', 'success');
-                const exportUrl = `${API_URL}/export?format=complete&timestamp=${Date.now()}`;
-                window.open(exportUrl, '_blank');
-                console.log('📥 Export initiated');
+                showToast('Preparing professional dataset export...', 'success');
+                
+                // Open export endpoint in new tab
+                const exportUrl = `${API_BASE_URL}/export?format=edits_only&timestamp=${Date.now()}`;
+                const exportWindow = window.open(exportUrl, '_blank');
+                
+                if (!exportWindow) {
+                    // If popup was blocked, provide alternative
+                    showToast('Export popup blocked. Click the Export button again to download.', 'warning');
+                } else {
+                    console.log('📥 Professional dataset export initiated');
+                }
             } catch (error) {
-                console.error('Export error:', error);
-                showToast('Error initiating export', 'error');
+                console.error('Export operation failed:', error);
+                showToast('Failed to initiate export operation', 'error');
             }
         }
 
-        // Apply filter (placeholder for future implementation)
+        // Filter application (for future enhancement)
         function applyFilter() {
             const selectedFilter = document.getElementById('filterSelect').value;
             currentFilter = selectedFilter;
-            showToast(`Filter applied: ${selectedFilter.replace('_', ' ').toUpperCase()}`, 'success');
-            console.log(`🔍 Filter applied: ${selectedFilter}`);
+            
+            const filterDisplayNames = {
+                'all': 'All Items',
+                'translated_only': 'Translated Only', 
+                'not_edited': 'Needs Review',
+                'edited': 'Already Reviewed',
+                'needs_review': 'Potential Issues',
+                'high_quality': 'High Quality Reviews'
+            };
+            
+            showToast(`Filter Applied: ${filterDisplayNames[selectedFilter]}`, 'success');
+            console.log(`🔍 Professional filter applied: ${selectedFilter}`);
         }
 
-        // Toast notification system
+        // Advanced toast notification system
         function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            const icon = document.getElementById('toastIcon');
-            const msg = document.getElementById('toastMessage');
+            const toastElement = document.getElementById('toast');
+            const iconElement = document.getElementById('toastIcon');
+            const messageElement = document.getElementById('toastMessage');
 
-            const icons = {
+            const toastIcons = {
                 success: '✅',
-                error: '❌',
-                warning: '⚠️'
+                error: '❌', 
+                warning: '⚠️',
+                info: 'ℹ️'
             };
 
-            toast.className = `toast ${type}`;
-            icon.textContent = icons[type] || '📢';
-            msg.textContent = message;
+            toastElement.className = `toast ${type}`;
+            iconElement.textContent = toastIcons[type] || '📢';
+            messageElement.textContent = message;
 
-            toast.style.display = 'flex';
+            toastElement.style.display = 'flex';
 
-            // Auto-hide after 4 seconds
+            // Auto-hide toast after 4.5 seconds
             setTimeout(() => {
-                toast.style.display = 'none';
-            }, 4000);
+                toastElement.style.display = 'none';
+            }, 4500);
 
-            console.log(`📢 Toast [${type.toUpperCase()}]: ${message}`);
+            console.log(`📢 Toast Notification [${type.toUpperCase()}]: ${message}`);
         }
 
-        // Start periodic updates
-        function startPeriodicUpdates() {
-            console.log('⏰ Starting periodic updates...');
+        // Periodic background tasks
+        function startPeriodicTasks() {
+            console.log('⏰ Starting periodic background tasks for professional editing...');
             
-            // Send activity every 15 seconds
+            // Send user activity heartbeat every 20 seconds
             setInterval(() => {
-                sendActivity(currentIndex);
-            }, 15000);
+                trackUserActivity(currentIndex);
+            }, 20000);
 
-            // Update stats every 30 seconds
+            // Update statistics display every 45 seconds
             setInterval(() => {
-                updateStats();
-            }, 30000);
+                updateStatisticsDisplay();
+            }, 45000);
             
-            // Test connection every 60 seconds
+            // Test server connection every 90 seconds
             setInterval(() => {
-                testConnection();
-            }, 60000);
+                testServerConnection();
+            }, 90000);
             
-            // Initial stats update
-            updateStats();
+            // Initial statistics update
+            updateStatisticsDisplay();
         }
 
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey || e.metaKey) {
-                switch(e.key) {
+        // Enhanced keyboard shortcuts for professional workflow
+        document.addEventListener('keydown', (event) => {
+            if (event.ctrlKey || event.metaKey) {
+                switch(event.key) {
                     case 's':
-                        e.preventDefault();
+                        event.preventDefault();
                         saveEdit();
                         break;
                     case 'ArrowRight':
-                        e.preventDefault();
+                        event.preventDefault();
                         nextItem();
                         break;
                     case 'ArrowLeft':
-                        e.preventDefault();
+                        event.preventDefault();
                         previousItem();
                         break;
                     case 'Enter':
-                        e.preventDefault();
+                        event.preventDefault();
                         saveAndNext();
                         break;
                     case 'r':
-                        e.preventDefault();
+                        event.preventDefault();
                         randomItem();
+                        break;
+                    case 'e':
+                        event.preventDefault();
+                        document.getElementById('editedCaption').focus();
                         break;
                 }
             }
         });
 
-        // Handle page unload
-        window.addEventListener('beforeunload', async (e) => {
+        // Handle page unload and cleanup
+        window.addEventListener('beforeunload', async (event) => {
             if (currentItemLocked) {
                 await unlockCurrentItem();
             }
+            
+            // Track session end
+            console.log('📊 Professional editing session ending...');
         });
 
-        // Initialize app when page loads
+        // Convenience function aliases for professional workflow
+        const loadItem = loadItemData;
+        const saveReview = saveEdit;
+        const nextReview = nextItem;
+        const previousReview = previousItem;
+
+        // Initialize application when DOM is fully loaded
         window.addEventListener('load', () => {
-            console.log('🌟 Yoruba Caption Editor initialized');
-            init();
+            console.log('🌟 Yoruba Caption Editor Professional Edition - Ready for TamynatorSama');
+            console.log('📅 Current Date and Time (UTC): 2025-10-16 02:23:44');
+            console.log('👤 Current User Login: TamynatorSama');
+            initializeApplication();
         });
+
+        // Application performance monitoring
+        const performanceMonitor = {
+            startTime: Date.now(),
+            
+            logPerformance: function(action, duration) {
+                console.log(`⚡ Performance: ${action} completed in ${duration}ms`);
+            },
+            
+            measureAction: async function(actionName, actionFunction) {
+                const startTime = Date.now();
+                const result = await actionFunction();
+                const duration = Date.now() - startTime;
+                this.logPerformance(actionName, duration);
+                return result;
+            }
+        };
+
+        // Enhanced error handling for production environment
+        window.addEventListener('error', (event) => {
+            console.error('💥 Global Error Handler:', {
+                message: event.message,
+                source: event.filename,
+                line: event.lineno,
+                column: event.colno,
+                error: event.error
+            });
+            
+            showToast('An unexpected error occurred. Please refresh if issues persist.', 'error');
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('💥 Unhandled Promise Rejection:', event.reason);
+            showToast('A background operation failed. Functionality may be limited.', 'warning');
+        });
+
+        // Professional editing analytics
+        const editingAnalytics = {
+            sessionStartTime: new Date('2025-10-16T02:23:44.000Z'),
+            itemsReviewed: 0,
+            editsCompleted: 0,
+            
+            trackItemReview: function() {
+                this.itemsReviewed++;
+                console.log(`📊 Analytics: ${this.itemsReviewed} items reviewed this session`);
+            },
+            
+            trackEditCompletion: function() {
+                this.editsCompleted++;
+                console.log(`📊 Analytics: ${this.editsCompleted} edits completed this session`);
+            },
+            
+            getSessionSummary: function() {
+                const sessionDuration = Math.floor((Date.now() - this.sessionStartTime.getTime()) / 1000 / 60);
+                return {
+                    duration_minutes: sessionDuration,
+                    items_reviewed: this.itemsReviewed,
+                    edits_completed: this.editsCompleted,
+                    avg_time_per_item: this.itemsReviewed > 0 ? sessionDuration / this.itemsReviewed : 0
+                };
+            }
+        };
+
+        // Debug and development helpers (available in console)
+        window.YorubaEditorDebug = {
+            getCurrentItem: () => currentIndex,
+            getCurrentUser: () => currentUsername,
+            getSessionStats: () => editingAnalytics.getSessionSummary(),
+            testConnection: testServerConnection,
+            forceReload: () => loadItemData(currentIndex),
+            jumpToItem: (index) => loadItemData(index),
+            simulateError: () => { throw new Error('Simulated error for testing'); }
+        };
+
+        console.log('🔧 Debug tools available via: window.YorubaEditorDebug');
+        console.log('🎯 Professional Yoruba Caption Editor initialized successfully');
+        console.log('👨‍💻 Ready for TamynatorSama professional editing session');
     </script>
 </body>
 </html>
