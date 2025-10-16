@@ -912,37 +912,43 @@
             </div>
         </div>
 
-        <div class="stats-bar">
-            <div class="stat-card">
-                <h3 id="stat-total">0</h3>
-                <p>Total Dataset Items</p>
-            </div>
-            <div class="stat-card">
-                <h3 id="stat-translated">0</h3>
-                <p>Machine Translated</p>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progress-translated" style="width: 0%"></div>
-                </div>
-                <p class="progress-text" id="completion-text">0.0% Complete</p>
-            </div>
-            <div class="stat-card">
-                <h3 id="stat-edited">0</h3>
-                <p>Human Reviewed</p>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progress-edited" style="width: 0%"></div>
-                </div>
-                <p class="progress-text" id="edit-text">0.0% Reviewed</p>
-            </div>
-            <div class="stat-card">
-                <h3 id="stat-current">0</h3>
-                <p>Current Position</p>
-                <p class="progress-text" id="current-progress">0 of 0</p>
-            </div>
-            <div class="active-users">
-                <h4>👥 Active Collaborative Editors</h4>
-                <div id="activeUsersList">Loading collaborative session data...</div>
-            </div>
+        <!-- Replace the stats-bar section in your HTML -->
+<!-- Find and replace the stats-bar section -->
+<div class="stats-bar">
+    <div class="stat-card">
+        <h3 id="stat-total">0</h3>
+        <p>Total Dataset Items</p>
+    </div>
+    <div class="stat-card">
+        <h3 id="stat-translated">0</h3>
+        <p>Machine Translated</p>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-translated" style="width: 0%"></div>
         </div>
+        <p class="progress-text" id="completion-text">0.0% Complete</p>
+    </div>
+    <div class="stat-card">
+        <h3 id="stat-edited">0</h3>
+        <p>Human Reviewed</p>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-edited" style="width: 0%"></div>
+        </div>
+        <p class="progress-text" id="edit-text">0.00% Reviewed</p>
+    </div>
+    <div class="stat-card">
+        <h3 id="stat-current">0</h3>
+        <p>Current Position</p>
+        <p class="progress-text" id="current-progress">0 of 0</p>
+    </div>
+    <div class="active-users">
+        <h4>👥 Active Professional Editors</h4>
+        <div id="activeUsersList">
+            <span style="color: #6c757d; font-style: italic;">
+                Loading collaborative session data...
+            </span>
+        </div>
+    </div>
+</div>
 
         <div class="controls">
             <div class="nav-buttons">
@@ -1593,50 +1599,83 @@
         }
 
         // Statistics and progress tracking
-        async function updateStatisticsDisplay() {
-            try {
-                const statsResponse = await fetch(`${API_BASE_URL}/stats`);
-                
-                if (!statsResponse.ok) {
-                    throw new Error(`Stats request failed with status ${statsResponse.status}`);
-                }
-                
-                const statsData = await statsResponse.json();
+        // Statistics and progress tracking (UPDATED VERSION)
+async function updateStatisticsDisplay() {
+    try {
+        const statsResponse = await fetch(`${API_BASE_URL}/stats`);
+        
+        if (!statsResponse.ok) {
+            throw new Error(`Stats request failed with status ${statsResponse.status}`);
+        }
+        
+        const statsData = await statsResponse.json();
 
-                totalDatasetItems = statsData.total;
-                
-                // Update main statistics cards
-                document.getElementById('stat-total').textContent = statsData.total.toLocaleString();
-                document.getElementById('stat-translated').textContent = statsData.translated.toLocaleString();
-                document.getElementById('stat-edited').textContent = statsData.edited.toLocaleString();
-                document.getElementById('stat-current').textContent = (currentIndex + 1).toLocaleString();
+        totalDatasetItems = statsData.total;
+        
+        // Update main statistics cards
+        document.getElementById('stat-total').textContent = statsData.total.toLocaleString();
+        document.getElementById('stat-translated').textContent = statsData.translated.toLocaleString();
+        document.getElementById('stat-edited').textContent = statsData.edited.toLocaleString();
+        document.getElementById('stat-current').textContent = (currentIndex + 1).toLocaleString();
 
-                // Update progress bars and percentages
-                const completionPercentage = parseFloat(statsData.completion_rate) || 0;
-                const editPercentage = parseFloat(statsData.edit_rate) || 0;
+        // Update progress bars and percentages
+        const completionPercentage = parseFloat(statsData.completion_rate) || 0;
+        const editPercentage = parseFloat(statsData.edit_rate) || 0;
 
-                document.getElementById('progress-translated').style.width = completionPercentage + '%';
-                document.getElementById('progress-edited').style.width = editPercentage + '%';
-                
-                document.getElementById('completion-text').textContent = `${completionPercentage}% Complete`;
-                document.getElementById('edit-text').textContent = `${editPercentage}% Reviewed`;
-                document.getElementById('current-progress').textContent = `${(currentIndex + 1).toLocaleString()} of ${totalDatasetItems.toLocaleString()}`;
-
-                // Update input field maximum value
-                document.getElementById('indexInput').max = totalDatasetItems - 1;
-
-                // Update active users display
-                updateActiveUsersDisplay(statsData.active_users);
-                
-                // Update connection status based on successful stats retrieval
-                updateConnectionStatus(true);
-
-            } catch (error) {
-                console.error('Error updating statistics:', error);
-                updateConnectionStatus(false);
+        document.getElementById('progress-translated').style.width = completionPercentage + '%';
+        document.getElementById('progress-edited').style.width = editPercentage + '%';
+        
+        // ENHANCED: Special handling for completed datasets
+        if (completionPercentage >= 99.5) {
+            document.getElementById('completion-text').innerHTML = `
+                <span style="color: #10b981; font-weight: bold;">
+                    ✅ ${completionPercentage}% - Translation Complete!
+                </span>
+            `;
+            
+            // Update the machine translation header to show completion
+            const modelTranslationBox = document.querySelector('.caption-box.model h4');
+            if (modelTranslationBox && !modelTranslationBox.innerHTML.includes('✅')) {
+                modelTranslationBox.innerHTML = '🤖✅ Machine Translation Complete (Facebook NLLB-200)';
             }
+        } else {
+            document.getElementById('completion-text').textContent = `${completionPercentage}% Complete`;
+        }
+        
+        // Enhanced edit percentage display
+        if (editPercentage >= 1.0) {
+            document.getElementById('edit-text').innerHTML = `
+                <span style="color: #667eea; font-weight: bold;">
+                    ${editPercentage}% Professionally Reviewed
+                </span>
+            `;
+        } else if (editPercentage > 0) {
+            document.getElementById('edit-text').textContent = `${editPercentage}% Reviewed - Great Progress!`;
+        } else {
+            document.getElementById('edit-text').textContent = `${editPercentage}% Reviewed`;
+        }
+        
+        document.getElementById('current-progress').textContent = `${(currentIndex + 1).toLocaleString()} of ${totalDatasetItems.toLocaleString()}`;
+
+        // Update input field maximum value
+        document.getElementById('indexInput').max = totalDatasetItems - 1;
+
+        // Update active users display
+        updateActiveUsersDisplay(statsData.active_users);
+        
+        // Update connection status based on successful stats retrieval
+        updateConnectionStatus(true);
+
+        // Log completion status
+        if (completionPercentage >= 99.5) {
+            console.log('🎉 Dataset is fully translated! Ready for professional human review.');
         }
 
+    } catch (error) {
+        console.error('Error updating statistics:', error);
+        updateConnectionStatus(false);
+    }
+}
         function updateActiveUsersDisplay(activeUsers) {
             const activeUsersContainer = document.getElementById('activeUsersList');
             
