@@ -493,12 +493,16 @@ async function saveEditsToGoogleDrive() {
 }
 
 // MEMORY-OPTIMIZED SYNC FUNCTION
+// MEMORY-OPTIMIZED SYNC FUNCTION (ENHANCED)
 async function performDataSync() {
     console.log('🔄 Performing memory-optimized data sync...');
+    console.log(`📁 Checking Google Drive folder: ${DRIVE_FOLDER_ID}`);
+    
     const syncStartTime = Date.now();
 
     try {
         // Step 1: Analyze main dataset structure (don't load data)
+        console.log('📊 Step 1: Analyzing dataset structure...');
         let analysis = await analyzeDatasetStructure('translated_1M_final.csv');
         
         if (!analysis) {
@@ -508,6 +512,29 @@ async function performDataSync() {
 
         if (!analysis) {
             console.error('❌ No translation dataset found in Google Drive');
+            console.error('🔍 Looking for files: translated_1M_final.csv OR translation_checkpoint.csv');
+            console.error(`📁 In folder: ${DRIVE_FOLDER_ID}`);
+            
+            // List files in folder for debugging
+            try {
+                const folderContents = await drive.files.list({
+                    q: `'${DRIVE_FOLDER_ID}' in parents and trashed=false`,
+                    fields: 'files(name, size, modifiedTime)'
+                });
+                
+                console.log('📋 Files found in Google Drive folder:');
+                folderContents.data.files.forEach(file => {
+                    const sizeInMB = (parseInt(file.size || 0) / 1024 / 1024).toFixed(2);
+                    console.log(`   📄 ${file.name} (${sizeInMB} MB, ${file.modifiedTime})`);
+                });
+                
+                if (folderContents.data.files.length === 0) {
+                    console.error('❌ Google Drive folder is empty!');
+                }
+            } catch (listError) {
+                console.error('❌ Cannot list folder contents:', listError.message);
+            }
+            
             return false;
         }
 
@@ -523,32 +550,37 @@ async function performDataSync() {
             lastSync: new Date().toISOString()
         };
 
-        console.log(`✅ Dataset metadata stored: ${datasetInfo.total.toLocaleString()} items`);
+        console.log(`✅ Dataset metadata loaded successfully:`);
+        console.log(`   📊 Total items: ${datasetInfo.total.toLocaleString()}`);
+        console.log(`   ✔️ Translated: ${datasetInfo.translated.toLocaleString()}`);
+        console.log(`   📄 Source: ${datasetInfo.fileName}`);
 
         // Step 3: Load human edits (small file, safe to load completely)
+        console.log('📊 Step 3: Loading human edits...');
         const editsFileContent = await loadSmallFileFromDrive('human_edits.csv');
         if (editsFileContent) {
             humanEdits = parseSmallCSV(editsFileContent);
-            console.log(`✅ Loaded ${humanEdits.length} human edits`);
+            console.log(`✅ Loaded ${humanEdits.length} existing human edits`);
         } else {
             humanEdits = [];
-            console.log('📝 No existing human edits found');
+            console.log('📝 No existing human edits found (starting fresh)');
         }
 
         // Step 4: Clear cache to free memory
         itemCache.clear();
-        console.log('🧹 Cleared item cache');
+        console.log('🧹 Item cache cleared');
 
         const syncDuration = Date.now() - syncStartTime;
         const memoryUsage = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
         
-        console.log(`🎉 Sync completed successfully in ${syncDuration}ms`);
+        console.log(`🎉 Data sync completed successfully in ${syncDuration}ms`);
         console.log(`💾 Current memory usage: ${memoryUsage}MB`);
         console.log(`📊 Cache stats: ${systemStats.cacheHits} hits, ${systemStats.cacheMisses} misses`);
         
         return true;
     } catch (error) {
-        console.error('❌ Data sync failed:', error.message);
+        console.error('❌ Critical data sync failure:', error.message);
+        console.error('Stack trace:', error.stack);
         systemStats.errorCount++;
         return false;
     }
@@ -1099,8 +1131,11 @@ async function gracefulShutdown(signal) {
 }
 
 // Start the server
+// Start the server (CORRECTED VERSION)
 async function startServer() {
     console.log('🔧 Initializing server components...');
+    console.log(`📅 Current Date and Time (UTC): ${new Date().toISOString().replace('T', ' ').substring(0, 19)}`);
+    console.log(`👤 Current User's Login: TamynatorSama`);
     
     // Validate environment
     if (!DRIVE_FOLDER_ID) {
@@ -1117,11 +1152,22 @@ async function startServer() {
         process.exit(1);
     }
     
-    // Perform initial data sync
+    // CRITICAL: Perform initial data sync BEFORE starting server
+    console.log('🔄 Performing critical initial data sync...');
     const syncSuccessful = await performDataSync();
     if (!syncSuccessful) {
-        console.warn('⚠️ Initial data sync failed');
-        console.warn('💡 Server will start with limited functionality');
+        console.error('❌ Critical: Initial data sync failed');
+        console.error('💡 Cannot start server without dataset access');
+        console.error('🔍 Check your Google Drive folder ID and file permissions');
+        process.exit(1);
+    }
+    
+    // Verify dataset is loaded
+    if (datasetInfo.total === 0) {
+        console.error('❌ Critical: No dataset items loaded');
+        console.error(`📁 Checked folder: ${DRIVE_FOLDER_ID}`);
+        console.error('💡 Ensure translated_1M_final.csv or translation_checkpoint.csv exists in the folder');
+        process.exit(1);
     }
     
     // Start HTTP server
@@ -1130,10 +1176,11 @@ async function startServer() {
         
         console.log('\n' + '='.repeat(80));
         console.log('🌟 YORUBA CAPTION EDITOR - SERVER READY');
-        console.log(`📅 Started: 2025-10-16 02:15:07 UTC`);
+        console.log(`📅 Started: ${new Date().toISOString().replace('T', ' ').substring(0, 19)} UTC`);
         console.log(`👤 Primary User: TamynatorSama`);
         console.log(`🌐 Server URL: http://localhost:${PORT}`);
-        console.log(`📊 Dataset: ${datasetInfo.total?.toLocaleString() || 0} items`);
+        console.log(`📊 Dataset: ${datasetInfo.total?.toLocaleString() || 0} items loaded`);
+        console.log(`📄 Source file: ${datasetInfo.fileName || 'Unknown'}`);
         console.log(`✏️ Human Edits: ${humanEdits.length.toLocaleString()}`);
         console.log(`💾 Memory Usage: ${memoryUsage}MB (optimized)`);
         console.log(`📁 Google Drive Folder: ${DRIVE_FOLDER_ID}`);
