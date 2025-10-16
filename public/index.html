@@ -1,0 +1,1710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yoruba Caption Editor - TamynatorSama Edition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+
+        .user-info {
+            background: rgba(255,255,255,0.2);
+            padding: 12px 24px;
+            border-radius: 25px;
+            display: inline-block;
+            font-size: 14px;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .stat-card h3 {
+            font-size: 2.2em;
+            color: #667eea;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .stat-card p {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+        }
+
+        .progress-text {
+            font-size: 12px;
+            margin-top: 5px;
+            color: #374151;
+            font-weight: 600;
+        }
+
+        .active-users {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            padding: 20px;
+            border-radius: 12px;
+            grid-column: 1 / -1;
+        }
+
+        .active-users h4 {
+            color: #1976d2;
+            margin-bottom: 12px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-badge {
+            display: inline-block;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin: 4px;
+            font-size: 0.85em;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 2px solid #e3f2fd;
+        }
+
+        .controls {
+            padding: 25px 30px;
+            background: #fff;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .btn-warning:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .index-input {
+            width: 130px;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 14px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .index-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .filter-select {
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            min-width: 200px;
+            background: white;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 35px;
+            padding: 35px;
+        }
+
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+        }
+
+        .image-section {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .image-container {
+            position: relative;
+            width: 100%;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #f8f9fa;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
+
+        .image-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .image-loading {
+            width: 100%;
+            height: 350px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .image-error {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 15px;
+            text-align: center;
+            min-height: 350px;
+        }
+
+        .image-error-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.7;
+        }
+
+        .image-error-text {
+            color: #6c757d;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .image-error-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .error-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .error-btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .error-btn-secondary {
+            background: #f8f9fa;
+            color: #667eea;
+            border: 2px solid #dee2e6;
+        }
+
+        .error-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .caption-section {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            width: fit-content;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .status-badge.edited {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+        }
+
+        .status-badge.pending {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #92400e;
+        }
+
+        .status-badge.locked {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+        }
+
+        .status-badge.complete {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1e40af;
+        }
+
+        .caption-box {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .caption-box h4 {
+            margin-bottom: 15px;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .caption-box.english {
+            border-left-color: #3b82f6;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        }
+
+        .caption-box.model {
+            border-left-color: #f59e0b;
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        }
+
+        .caption-box.edit {
+            border-left-color: #10b981;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+
+        .caption-text {
+            font-size: 16px;
+            line-height: 1.7;
+            color: #1f2937;
+            word-wrap: break-word;
+            font-weight: 500;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 140px;
+            transition: all 0.3s ease;
+            line-height: 1.6;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea:disabled {
+            background: #f3f4f6;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        input[type="text"], input[type="number"], select {
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .quality-rating {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+
+        .stars {
+            display: flex;
+            gap: 5px;
+        }
+
+        .star {
+            cursor: pointer;
+            font-size: 24px;
+            color: #d1d5db;
+            transition: all 0.2s ease;
+        }
+
+        .star.active {
+            color: #fbbf24;
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+        }
+
+        .star:hover {
+            color: #f59e0b;
+            transform: scale(1.1);
+        }
+
+        .rating-text {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .diacritic-helper {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #3b82f6;
+        }
+
+        .diacritic-helper h5 {
+            margin-bottom: 15px;
+            color: #1e40af;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .diacritic-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .diacritic-btn {
+            padding: 10px 16px;
+            background: white;
+            border: 2px solid #3b82f6;
+            color: #1e40af;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .diacritic-btn:hover {
+            background: #3b82f6;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .action-buttons .btn-primary {
+            grid-column: 1 / -1;
+        }
+
+        .shortcuts-info {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 13px;
+            border: 2px solid #f59e0b;
+        }
+
+        .shortcuts-info h5 {
+            margin-bottom: 12px;
+            color: #92400e;
+            font-weight: 600;
+        }
+
+        .shortcuts-info ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .shortcuts-info li {
+            margin: 6px 0;
+            color: #78350f;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .shortcuts-info kbd {
+            background: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #d97706;
+            font-family: monospace;
+            font-size: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 20px 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            display: none;
+            align-items: center;
+            gap: 15px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+            max-width: 450px;
+            border-left: 5px solid #10b981;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(500px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast.success {
+            border-left-color: #10b981;
+        }
+
+        .toast.error {
+            border-left-color: #ef4444;
+        }
+
+        .toast.warning {
+            border-left-color: #f59e0b;
+        }
+
+        .toast-icon {
+            font-size: 24px;
+        }
+
+        .login-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .login-content {
+            background: white;
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .login-content h2 {
+            margin-bottom: 15px;
+            color: #374151;
+            font-size: 2em;
+        }
+
+        .login-content .subtitle {
+            color: #6c757d;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .login-content input {
+            width: 100%;
+            padding: 18px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .login-content input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1500;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .loading-content p {
+            margin-top: 20px;
+            color: #6c757d;
+            font-size: 16px;
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 500;
+        }
+
+        .connection-status.online {
+            background: #d1fae5;
+            color: #065f46;
+            border: 2px solid #10b981;
+        }
+
+        .connection-status.offline {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 2px solid #ef4444;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .nav-buttons {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .stats-bar {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                padding: 20px;
+            }
+            
+            .content {
+                padding: 20px;
+                gap: 20px;
+            }
+            
+            .diacritic-buttons {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Modal -->
+    <div class="login-modal" id="loginModal">
+        <div class="login-content">
+            <h2>🎯 Yoruba Caption Editor</h2>
+            <p class="subtitle">
+                Welcome! Enter your name to start reviewing and editing machine-translated Yoruba captions.
+                Your edits will be automatically saved to Google Drive.
+            </p>
+            <input 
+                type="text" 
+                id="usernameInput" 
+                placeholder="Enter your name"
+                value="TamynatorSama"
+                onkeypress="if(event.key==='Enter') login()"
+            >
+            <button class="btn btn-primary" onclick="login()" style="width: 100%; font-size: 16px;">
+                🚀 Start Editing Session
+            </button>
+            <p style="font-size: 12px; color: #6c757d; margin-top: 20px;">
+                🕒 Current Time: <span id="currentTime">2025-01-16 01:17:33</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Loading dataset from Google Drive...</p>
+            <p style="font-size: 14px; margin-top: 10px; color: #6c757d;">Please wait while we sync the latest data</p>
+        </div>
+    </div>
+
+    <!-- Connection Status -->
+    <div class="connection-status online" id="connectionStatus">
+        🟢 Connected
+    </div>
+
+    <!-- Main Application -->
+    <div class="container" id="mainApp" style="display: none;">
+        <div class="header">
+            <h1>🖼️ Yoruba Image Caption Editor</h1>
+            <p class="subtitle">Professional Review & Enhancement of Machine Translations</p>
+            <div class="user-info">
+                👤 Editor: <strong id="currentUsername">TamynatorSama</strong> | 
+                📅 Session: <span id="currentDate">2025-01-16</span> |
+                ⏱️ Started: <span id="sessionStart">01:17:33 UTC</span>
+            </div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-card">
+                <h3 id="stat-total">0</h3>
+                <p>Total Items</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="stat-translated">0</h3>
+                <p>Machine Translated</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-translated" style="width: 0%"></div>
+                </div>
+                <p class="progress-text" id="completion-text">0% Complete</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="stat-edited">0</h3>
+                <p>Human Reviewed</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-edited" style="width: 0%"></div>
+                </div>
+                <p class="progress-text" id="edit-text">0% Reviewed</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="stat-current">0</h3>
+                <p>Current Item</p>
+                <p class="progress-text" id="current-progress">0 of 0</p>
+            </div>
+            <div class="active-users">
+                <h4>👥 Active Collaborative Editors</h4>
+                <div id="activeUsersList">Loading collaborative session...</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" onclick="loadItem(0)" title="Go to first item">
+                    ⏮️ First
+                </button>
+                <button class="btn btn-secondary" onclick="previousItem()" title="Previous item (Ctrl+←)">
+                    ⬅️ Previous
+                </button>
+                <input type="number" id="indexInput" class="index-input" value="0" min="0" placeholder="Index">
+                <button class="btn btn-primary" onclick="goToIndex()" title="Go to specific index">
+                    🎯 Go
+                </button>
+                <button class="btn btn-secondary" onclick="nextItem()" title="Next item (Ctrl+→)">
+                    ➡️ Next
+                </button>
+                <button class="btn btn-warning" onclick="randomItem()" title="Random item (Ctrl+R)">
+                    🎲 Random
+                </button>
+            </div>
+            
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <select id="filterSelect" class="filter-select" onchange="applyFilter()">
+                    <option value="all">All Items</option>
+                    <option value="translated_only">Translated Only</option>
+                    <option value="not_edited" selected>Needs Review</option>
+                    <option value="edited">Already Reviewed</option>
+                    <option value="needs_review">Potential Issues</option>
+                    <option value="high_quality">High Quality (4-5★)</option>
+                </select>
+                <button class="btn btn-success" onclick="exportData()" title="Export final dataset">
+                    📥 Export Dataset
+                </button>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="image-section">
+                <div class="image-container" id="imageContainer">
+                    <div class="image-loading">
+                        <div class="spinner"></div>
+                        <p>Loading image...</p>
+                    </div>
+                </div>
+                
+                <div class="caption-box english">
+                    <h4>🇬🇧 Original English Caption</h4>
+                    <p class="caption-text" id="englishCaption">Loading original caption...</p>
+                </div>
+                
+                <div class="caption-box model">
+                    <h4>🤖 Machine Translation (NLLB-200)</h4>
+                    <p class="caption-text" id="modelTranslation">Loading machine translation...</p>
+                </div>
+            </div>
+
+            <div class="caption-section">
+                <div id="statusBadge"></div>
+
+                <div class="caption-box edit">
+                    <h4>✏️ Review & Enhance Translation</h4>
+                    <textarea 
+                        id="editedCaption" 
+                        placeholder="Review the machine translation and make improvements..."
+                        title="Edit the Yoruba translation here"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">📝 Review Notes & Comments</label>
+                    <input 
+                        type="text" 
+                        id="notes" 
+                        placeholder="Note improvements made, issues found, or cultural considerations..."
+                        title="Optional notes about your edits">
+                </div>
+
+                <div class="form-group">
+                    <label>⭐ Translation Quality Rating</label>
+                    <div class="quality-rating">
+                        <div class="stars" id="qualityStars">
+                            <span class="star" data-rating="1" title="Poor - Major issues">★</span>
+                            <span class="star" data-rating="2" title="Fair - Some issues">★</span>
+                            <span class="star" data-rating="3" title="Good - Minor issues">★</span>
+                            <span class="star" data-rating="4" title="Very Good - High quality">★</span>
+                            <span class="star" data-rating="5" title="Excellent - Perfect">★</span>
+                        </div>
+                        <span class="rating-text" id="ratingText">Rate translation quality</span>
+                    </div>
+                </div>
+
+                <div class="diacritic-helper">
+                    <h5>🔤 Yoruba Special Characters & Diacritics</h5>
+                    <div class="diacritic-buttons">
+                        <button class="diacritic-btn" onclick="insertDiacritic('ẹ')" title="Insert ẹ">ẹ</button>
+                        <button class="diacritic-btn" onclick="insertDiacritic('ọ')" title="Insert ọ">ọ</button>
+                        <button class="diacritic-btn" onclick="insertDiacritic('ṣ')" title="Insert ṣ">ṣ</button>
+                        <button class="diacritic-btn" onclick="insertDiacritic('Ẹ')" title="Insert Ẹ">Ẹ</button>
+                        <button class="diacritic-btn" onclick="insertDiacritic('Ọ')" title="Insert Ọ">Ọ</button>
+                        <button class="diacritic-btn" onclick="insertDiacritic('Ṣ')" title="Insert Ṣ">Ṣ</button>
+                        <button class="diacritic-btn" onclick="insertDiacritic('à')" title="Insert à">à</button>
+                        <button class="diacritic-btn" onclick="insertDiacritic('á')" title="Insert á">á</button>
+                        <button class="diacritic-btn" onclick="insertDiacritic('è')" title="Insert è">è</button>
+                        <button class="diacritic-btn" onclick="insertDiacritic('é')" title="Insert é">é</button>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-success" onclick="saveEdit()" id="saveBtn" title="Save current review (Ctrl+S)">
+                        💾 Save Review
+                    </button>
+                    <button class="btn btn-primary" onclick="saveAndNext()" title="Save and move to next (Ctrl+Enter)">
+                        💾➡️ Save & Next
+                    </button>
+                    <button class="btn btn-secondary" onclick="skipItem()" title="Skip to next item">
+                        ⏭️ Skip Item
+                    </button>
+                </div>
+
+                <div class="shortcuts-info">
+                    <h5>⌨️ Keyboard Shortcuts</h5>
+                    <ul>
+                        <li><kbd>Ctrl</kbd> + <kbd>S</kbd> Save review</li>
+                        <li><kbd>Ctrl</kbd> + <kbd>→</kbd> Next item</li>
+                        <li><kbd>Ctrl</kbd> + <kbd>←</kbd> Previous item</li>
+                        <li><kbd>Ctrl</kbd> + <kbd>Enter</kbd> Save & Next</li>
+                        <li><kbd>Ctrl</kbd> + <kbd>R</kbd> Random item</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <span class="toast-icon" id="toastIcon"></span>
+        <span id="toastMessage"></span>
+    </div>
+
+    <script>
+        // Global variables
+        const API_URL = window.location.origin + '/api';
+        let currentUsername = '';
+        let currentIndex = 0;
+        let currentFilter = 'not_edited';
+        let currentQualityRating = 5;
+        let currentItemLocked = false;
+        let totalItems = 0;
+        let sessionStartTime = new Date();
+
+        // Initialize application
+        function init() {
+            console.log('🚀 Initializing Yoruba Caption Editor...');
+            
+            // Update current time
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 1000);
+            
+            // Set up quality rating stars
+            setupQualityRating();
+            
+            // Show login modal
+            document.getElementById('loginModal').style.display = 'flex';
+            
+            // Test API connection
+            testConnection();
+        }
+
+        function updateCurrentTime() {
+            const now = new Date();
+            const utcString = now.toISOString().replace('T', ' ').substring(0, 19);
+            document.getElementById('currentTime').textContent = utcString;
+        }
+
+        // Test API connection
+        async function testConnection() {
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                if (response.ok) {
+                    updateConnectionStatus(true);
+                } else {
+                    updateConnectionStatus(false);
+                }
+            } catch (error) {
+                console.error('Connection test failed:', error);
+                updateConnectionStatus(false);
+            }
+        }
+
+        function updateConnectionStatus(isOnline) {
+            const status = document.getElementById('connectionStatus');
+            if (isOnline) {
+                status.className = 'connection-status online';
+                status.innerHTML = '🟢 Connected';
+            } else {
+                status.className = 'connection-status offline';
+                status.innerHTML = '🔴 Offline';
+            }
+        }
+
+        // Login function
+        function login() {
+            const username = document.getElementById('usernameInput').value.trim();
+            if (!username) {
+                showToast('Please enter your name to continue', 'error');
+                return;
+            }
+
+            console.log(`👤 Logging in user: ${username}`);
+            currentUsername = username;
+            sessionStartTime = new Date();
+            
+            // Update UI elements
+            document.getElementById('currentUsername').textContent = username;
+            document.getElementById('currentDate').textContent = new Date().toISOString().substring(0, 10);
+            document.getElementById('sessionStart').textContent = sessionStartTime.toTimeString().substring(0, 8) + ' UTC';
+            
+            // Hide login modal and show loading
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            
+            // Simulate loading and then show main app
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                
+                // Initialize the editing session
+                startEditingSession();
+                
+                showToast(`Welcome back, ${username}! 🎉`, 'success');
+            }, 2000);
+        }
+
+        // Start editing session
+        async function startEditingSession() {
+            console.log('📊 Starting editing session...');
+            
+            try {
+                // Load first item
+                await loadItem(0);
+                
+                // Start periodic updates
+                startPeriodicUpdates();
+                
+                console.log('✅ Editing session started successfully');
+            } catch (error) {
+                console.error('❌ Error starting session:', error);
+                showToast('Error starting session. Please refresh the page.', 'error');
+            }
+        }
+
+        // Load item data
+        async function loadItem(index) {
+            try {
+                console.log(`📖 Loading item ${index}...`);
+                
+                // Unlock previous item if locked
+                if (currentItemLocked && currentIndex !== index) {
+                    await unlockCurrentItem();
+                }
+
+                currentIndex = index;
+                document.getElementById('indexInput').value = index;
+
+                // Show loading state
+                showImageLoading();
+                
+                const response = await fetch(`${API_URL}/item/${index}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Try to lock item for editing
+                await lockCurrentItem();
+
+                // Update UI with item data
+                updateItemDisplay(data);
+                
+                // Send activity update
+                sendActivity(index);
+
+                console.log(`✅ Loaded item ${index} successfully`);
+                
+            } catch (error) {
+                console.error('❌ Error loading item:', error);
+                showToast(`Error loading item ${index}: ${error.message}`, 'error');
+                showImageError(`Failed to load item ${index}`, error.message);
+            }
+        }
+
+        // Lock current item
+        async function lockCurrentItem() {
+            try {
+                const response = await fetch(`${API_URL}/lock/${currentIndex}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUsername })
+                });
+
+                const lockData = await response.json();
+                currentItemLocked = lockData.success;
+                
+                if (!lockData.success && response.status === 423) {
+                    showToast(`Item locked by ${lockData.locked_by}`, 'warning');
+                }
+                
+            } catch (error) {
+                console.error('Error locking item:', error);
+                currentItemLocked = false;
+            }
+        }
+
+        // Unlock current item
+        async function unlockCurrentItem() {
+            if (!currentItemLocked) return;
+            
+            try {
+                await fetch(`${API_URL}/unlock/${currentIndex}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUsername })
+                });
+                currentItemLocked = false;
+            } catch (error) {
+                console.error('Error unlocking item:', error);
+            }
+        }
+
+        // Update item display
+        function updateItemDisplay(data) {
+            // Update text content
+            document.getElementById('englishCaption').textContent = data.Caption || 'No caption available';
+            document.getElementById('modelTranslation').textContent = data.translation || 'Not yet translated';
+            
+            // Update textarea and notes
+            document.getElementById('editedCaption').value = data.edited_translation || data.translation || '';
+            document.getElementById('notes').value = data.notes || '';
+
+            // Set quality rating
+            currentQualityRating = data.quality_score || 5;
+            updateQualityStars(currentQualityRating);
+
+            // Handle form state based on lock status
+            const isLocked = data.locked && data.locked_by !== currentUsername;
+            document.getElementById('editedCaption').disabled = isLocked;
+            document.getElementById('saveBtn').disabled = isLocked;
+
+            // Load image
+            loadImage(data.image_url, data.index);
+
+            // Update status badge
+            updateStatusBadge(data);
+
+            // Update stats
+            updateStats();
+        }
+
+        // Image loading functions
+        function showImageLoading() {
+            const imageContainer = document.getElementById('imageContainer');
+            imageContainer.innerHTML = `
+                <div class="image-loading">
+                    <div class="spinner"></div>
+                    <p>Loading image ${currentIndex + 1}...</p>
+                </div>
+            `;
+        }
+
+        function loadImage(imageUrl, index) {
+            const imageContainer = document.getElementById('imageContainer');
+            
+            if (!imageUrl) {
+                showImageError('No image URL provided', 'The dataset entry does not contain an image URL.');
+                return;
+            }
+            
+            showImageLoading();
+            
+            // Try direct loading first
+            tryDirectImageLoad(imageUrl, index, imageContainer);
+        }
+
+        function tryDirectImageLoad(imageUrl, index, container) {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            
+            const timeout = setTimeout(() => {
+                img.src = '';
+                tryProxyImageLoad(imageUrl, index, container);
+            }, 8000);
+            
+            img.onload = function() {
+                clearTimeout(timeout);
+                container.innerHTML = `<img src="${imageUrl}" alt="Image ${index + 1}" crossorigin="anonymous">`;
+            };
+            
+            img.onerror = function() {
+                clearTimeout(timeout);
+                tryProxyImageLoad(imageUrl, index, container);
+            };
+            
+            img.src = imageUrl;
+        }
+
+        function tryProxyImageLoad(imageUrl, index, container) {
+            const proxyUrl = `${API_URL}/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+            const img = new Image();
+            
+            const timeout = setTimeout(() => {
+                img.src = '';
+                showImageError('Image failed to load', `Could not load image ${index + 1} from ${imageUrl.substring(0, 50)}...`);
+            }, 10000);
+            
+            img.onload = function() {
+                clearTimeout(timeout);
+                container.innerHTML = `<img src="${proxyUrl}" alt="Image ${index + 1}">`;
+            };
+            
+            img.onerror = function() {
+                clearTimeout(timeout);
+                showImageError('Image failed to load', `Could not load image ${index + 1} from ${imageUrl.substring(0, 50)}...`);
+            };
+            
+            img.src = proxyUrl;
+        }
+
+        function showImageError(title, message) {
+            const container = document.getElementById('imageContainer');
+            container.innerHTML = `
+                <div class="image-error">
+                    <div class="image-error-icon">🖼️</div>
+                    <div class="image-error-text">
+                        <strong>${title}</strong><br>
+                        ${message}
+                    </div>
+                    <div class="image-error-actions">
+                        <button onclick="retryImage()" class="error-btn error-btn-primary">
+                            🔄 Retry Load
+                        </button>
+                        <button onclick="nextItem()" class="error-btn error-btn-secondary">
+                            ⏭️ Skip Item
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function retryImage() {
+            showToast('Retrying image load...', 'warning');
+            loadItem(currentIndex);
+        }
+
+        // Update status badge
+        function updateStatusBadge(data) {
+            let statusHTML = '';
+            
+            if (data.locked && data.locked_by !== currentUsername) {
+                statusHTML = `<div class="status-badge locked">🔒 Locked by ${data.locked_by}</div>`;
+            } else if (data.human_edited) {
+                statusHTML = `<div class="status-badge edited">✅ Reviewed by ${data.editor}</div>`;
+            } else if (data.translation) {
+                statusHTML = `<div class="status-badge pending">📝 Needs Review</div>`;
+            } else {
+                statusHTML = `<div class="status-badge complete">⏳ Not Translated</div>`;
+            }
+            
+            document.getElementById('statusBadge').innerHTML = statusHTML;
+        }
+
+        // Quality rating system
+        function setupQualityRating() {
+            const stars = document.querySelectorAll('.star');
+            
+            stars.forEach(star => {
+                star.addEventListener('click', () => {
+                    const rating = parseInt(star.dataset.rating);
+                    currentQualityRating = rating;
+                    updateQualityStars(rating);
+                });
+                
+                star.addEventListener('mouseenter', () => {
+                    const rating = parseInt(star.dataset.rating);
+                    highlightStars(rating);
+                });
+            });
+            
+            document.getElementById('qualityStars').addEventListener('mouseleave', () => {
+                updateQualityStars(currentQualityRating);
+            });
+        }
+
+        function updateQualityStars(rating) {
+            const stars = document.querySelectorAll('.star');
+            
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+            
+            const ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+            document.getElementById('ratingText').textContent = `${rating}/5 - ${ratingLabels[rating]}`;
+        }
+
+        function highlightStars(rating) {
+            const stars = document.querySelectorAll('.star');
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.style.color = '#f59e0b';
+                } else {
+                    star.style.color = '#d1d5db';
+                }
+            });
+        }
+
+        // Save edit function
+        async function saveEdit() {
+            const editedTranslation = document.getElementById('editedCaption').value.trim();
+            const notes = document.getElementById('notes').value.trim();
+
+            if (!editedTranslation) {
+                showToast('Translation cannot be empty', 'error');
+                return;
+            }
+
+            try {
+                console.log(`💾 Saving edit for item ${currentIndex}...`);
+                
+                const response = await fetch(`${API_URL}/save`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        index: currentIndex,
+                        edited_translation: editedTranslation,
+                        editor: currentUsername,
+                        notes: notes,
+                        quality_score: currentQualityRating
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('✅ Review saved successfully!', 'success');
+                    currentItemLocked = false;
+                    
+                    // Update status badge
+                    document.getElementById('statusBadge').innerHTML = 
+                        `<div class="status-badge edited">✅ Reviewed by ${currentUsername}</div>`;
+                    
+                    updateStats();
+                    console.log(`✅ Edit saved for item ${currentIndex}`);
+                } else {
+                    throw new Error('Server returned success=false');
+                }
+            } catch (error) {
+                console.error('❌ Error saving edit:', error);
+                showToast(`Error saving review: ${error.message}`, 'error');
+            }
+        }
+
+        // Navigation functions
+        function nextItem() {
+            const nextIndex = currentIndex + 1;
+            if (nextIndex < totalItems) {
+                loadItem(nextIndex);
+            } else {
+                showToast('This is the last item in the dataset', 'warning');
+            }
+        }
+
+        function previousItem() {
+            if (currentIndex > 0) {
+                loadItem(currentIndex - 1);
+            } else {
+                showToast('This is the first item in the dataset', 'warning');
+            }
+        }
+
+        function goToIndex() {
+            const index = parseInt(document.getElementById('indexInput').value);
+            if (index >= 0 && index < totalItems) {
+                loadItem(index);
+            } else {
+                showToast(`Please enter a number between 0 and ${totalItems - 1}`, 'error');
+            }
+        }
+
+        function randomItem() {
+            if (totalItems > 0) {
+                const randomIndex = Math.floor(Math.random() * totalItems);
+                loadItem(randomIndex);
+            }
+        }
+
+        function skipItem() {
+            nextItem();
+        }
+
+        function saveAndNext() {
+            saveEdit().then(() => {
+                setTimeout(() => nextItem(), 500);
+            }).catch((error) => {
+                console.error('Error in saveAndNext:', error);
+            });
+        }
+
+        // Insert diacritic character
+        function insertDiacritic(char) {
+            const textarea = document.getElementById('editedCaption');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            
+            textarea.value = text.substring(0, start) + char + text.substring(end);
+            textarea.selectionStart = textarea.selectionEnd = start + 1;
+            textarea.focus();
+        }
+
+        // Update statistics
+        async function updateStats() {
+            try {
+                const response = await fetch(`${API_URL}/stats`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+
+                totalItems = data.total;
+                
+                // Update stat cards
+                document.getElementById('stat-total').textContent = data.total.toLocaleString();
+                document.getElementById('stat-translated').textContent = data.translated.toLocaleString();
+                document.getElementById('stat-edited').textContent = data.edited.toLocaleString();
+                document.getElementById('stat-current').textContent = (currentIndex + 1).toLocaleString();
+
+                // Update progress bars
+                const completionPercent = parseFloat(data.completion_rate) || 0;
+                const editPercent = parseFloat(data.edit_rate) || 0;
+
+                document.getElementById('progress-translated').style.width = completionPercent + '%';
+                document.getElementById('progress-edited').style.width = editPercent + '%';
+                
+                document.getElementById('completion-text').textContent = `${completionPercent}% Complete`;
+                document.getElementById('edit-text').textContent = `${editPercent}% Reviewed`;
+                document.getElementById('current-progress').textContent = `${currentIndex + 1} of ${totalItems.toLocaleString()}`;
+
+                // Update input max value
+                document.getElementById('indexInput').max = totalItems - 1;
+
+                // Update active users
+                updateActiveUsers(data.active_users);
+                
+                // Update connection status
+                updateConnectionStatus(true);
+
+            } catch (error) {
+                console.error('Error updating stats:', error);
+                updateConnectionStatus(false);
+            }
+        }
+
+        function updateActiveUsers(activeUsers) {
+            const container = document.getElementById('activeUsersList');
+            
+            if (activeUsers && activeUsers.length > 0) {
+                const otherUsers = activeUsers.filter(user => user.username !== currentUsername);
+                
+                if (otherUsers.length > 0) {
+                    const usersHTML = otherUsers
+                        .map(user => {
+                            const sessionDuration = user.session_duration || 0;
+                            return `<span class="user-badge">👤 ${user.username} (Item #${(user.current_item || 0) + 1}, ${sessionDuration}m)</span>`;
+                        })
+                        .join('');
+                    container.innerHTML = usersHTML;
+                } else {
+                    container.innerHTML = '<span style="color: #6c757d;">You are the only active editor</span>';
+                }
+            } else {
+                container.innerHTML = '<span style="color: #6c757d;">No other active editors</span>';
+            }
+        }
+
+        // Send activity heartbeat
+        async function sendActivity(currentItem) {
+            try {
+                await fetch(`${API_URL}/activity`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: currentUsername,
+                        current_item: currentItem
+                    })
+                });
+            } catch (error) {
+                console.error('Error sending activity:', error);
+            }
+        }
+
+        // Export data
+        async function exportData() {
+            try {
+                showToast('Preparing dataset export...', 'success');
+                const exportUrl = `${API_URL}/export?format=complete&timestamp=${Date.now()}`;
+                window.open(exportUrl, '_blank');
+                console.log('📥 Export initiated');
+            } catch (error) {
+                console.error('Export error:', error);
+                showToast('Error initiating export', 'error');
+            }
+        }
+
+        // Apply filter (placeholder for future implementation)
+        function applyFilter() {
+            const selectedFilter = document.getElementById('filterSelect').value;
+            currentFilter = selectedFilter;
+            showToast(`Filter applied: ${selectedFilter.replace('_', ' ').toUpperCase()}`, 'success');
+            console.log(`🔍 Filter applied: ${selectedFilter}`);
+        }
+
+        // Toast notification system
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const msg = document.getElementById('toastMessage');
+
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️'
+            };
+
+            toast.className = `toast ${type}`;
+            icon.textContent = icons[type] || '📢';
+            msg.textContent = message;
+
+            toast.style.display = 'flex';
+
+            // Auto-hide after 4 seconds
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 4000);
+
+            console.log(`📢 Toast [${type.toUpperCase()}]: ${message}`);
+        }
+
+        // Start periodic updates
+        function startPeriodicUpdates() {
+            console.log('⏰ Starting periodic updates...');
+            
+            // Send activity every 15 seconds
+            setInterval(() => {
+                sendActivity(currentIndex);
+            }, 15000);
+
+            // Update stats every 30 seconds
+            setInterval(() => {
+                updateStats();
+            }, 30000);
+            
+            // Test connection every 60 seconds
+            setInterval(() => {
+                testConnection();
+            }, 60000);
+            
+            // Initial stats update
+            updateStats();
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 's':
+                        e.preventDefault();
+                        saveEdit();
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        nextItem();
+                        break;
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        previousItem();
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        saveAndNext();
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        randomItem();
+                        break;
+                }
+            }
+        });
+
+        // Handle page unload
+        window.addEventListener('beforeunload', async (e) => {
+            if (currentItemLocked) {
+                await unlockCurrentItem();
+            }
+        });
+
+        // Initialize app when page loads
+        window.addEventListener('load', () => {
+            console.log('🌟 Yoruba Caption Editor initialized');
+            init();
+        });
+    </script>
+</body>
+</html>
